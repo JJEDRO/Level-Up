@@ -6,6 +6,9 @@ let isOnlineMode = false; // Start in offline mode for GitHub hosting
 let autoSaveInterval;
 let refreshInterval;
 
+// Simple Cross-tab Real-time Chat using localStorage events
+let isRealtimeChatEnabled = true; // Always enabled for localStorage events
+
 // GitHub-based data sharing using GitHub Gist API
 const GITHUB_CONFIG = {
     enabled: false, // Users can enable this with their own token
@@ -255,6 +258,9 @@ function startAutoSave() {
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', async function() {
+    // Set up localStorage event listener for cross-tab real-time chat
+    setupCrossTabChatListener();
+    
     // Load saved GitHub configuration
     const savedGistId = localStorage.getItem('workout-gist-id');
     if (savedGistId) {
@@ -823,8 +829,12 @@ function updateConnectionStatus() {
         statusIndicator.textContent = '🌐 GitHub Sync';
         statusIndicator.style.backgroundColor = '#c6f6d5';
         statusIndicator.style.color = '#2f855a';
+    } else if (isRealtimeChatEnabled) {
+        statusIndicator.textContent = `💬 Live Chat • Room: ${roomCode}`;
+        statusIndicator.style.backgroundColor = '#bee3f8';
+        statusIndicator.style.color = '#2b6cb0';
     } else {
-        statusIndicator.textContent = `📱 Room: ${roomCode}`;
+        statusIndicator.textContent = `📱 Local Room: ${roomCode}`;
         statusIndicator.style.backgroundColor = '#e2e8f0';
         statusIndicator.style.color = '#4a5568';
     }
@@ -899,6 +909,11 @@ async function createBackup() {
 function createWorkoutRoom() {
     const roomCode = generateRoomCode();
     if (joinRoom(roomCode)) {
+        // Stop previous PubNub listener
+        if (isRealtimeChatEnabled) {
+            stopPubNubChatListener();
+        }
+        
         // Load data for the new room (will be empty for new room)
         loadData();
         
@@ -914,8 +929,11 @@ function createWorkoutRoom() {
             saveData();
         }
         
-        // Load chat for new room
+        // Load chat for new room and setup real-time listener
         loadChatMessages();
+        if (isRealtimeChatEnabled) {
+            setupPubNubChatListener();
+        }
         
         // Send welcome message
         sendSystemMessage(`Welcome to room ${roomCode}! Share this code with friends to workout together.`);
@@ -932,8 +950,18 @@ function joinWorkoutRoom() {
     const roomCode = prompt('Enter room code:');
     if (roomCode && roomCode.length === 6) {
         if (joinRoom(roomCode.toUpperCase())) {
+            // Stop previous PubNub listener
+            if (isRealtimeChatEnabled) {
+                stopPubNubChatListener();
+            }
+            
             loadData();
             loadChatMessages();
+            
+            // Setup real-time listener for the new room
+            if (isRealtimeChatEnabled) {
+                setupPubNubChatListener();
+            }
             
             // Send join message
             if (currentAuthUser) {
@@ -1150,6 +1178,11 @@ function showAuthSection() {
     // Stop chat polling when not authenticated
     stopChatPolling();
     
+    // Stop PubNub chat listener when not authenticated
+    if (isRealtimeChatEnabled) {
+        stopPubNubChatListener();
+    }
+    
     // Stop leaderboard polling when not authenticated
     stopLeaderboardPolling();
     
@@ -1193,8 +1226,15 @@ function showMainApp() {
     setupChatInput();
     loadChatMessages();
     
-    // Start chat polling for real-time updates
-    startChatPolling();
+    // Setup PubNub real-time chat listener
+    if (isRealtimeChatEnabled) {
+        setupPubNubChatListener();
+    }
+    
+    // Start chat polling for real-time updates (fallback for local storage)
+    if (!isRealtimeChatEnabled) {
+        startChatPolling();
+    }
     
     // Start leaderboard polling for real-time updates
     startLeaderboardPolling();
@@ -1755,11 +1795,15 @@ function sendMessage() {
         userId: currentAuthUser.id,
         message: message,
         timestamp: new Date().toISOString(),
-        type: 'user'
+        type: 'user',
+        roomCode: getCurrentRoom()
     };
     
     addMessageToChat(messageData);
     saveChatMessage(messageData);
+    
+    // Trigger cross-tab update
+    triggerCrossTabChatUpdate();
     
     input.value = '';
     input.focus();
@@ -1772,11 +1816,60 @@ function sendSystemMessage(message) {
         userId: 'system',
         message: message,
         timestamp: new Date().toISOString(),
-        type: 'system'
+        type: 'system',
+        roomCode: getCurrentRoom()
     };
     
     addMessageToChat(messageData);
     saveChatMessage(messageData);
+    
+    // Trigger cross-tab update
+    triggerCrossTabChatUpdate();
+}
+
+// Cross-tab real-time chat using localStorage events
+function setupCrossTabChatListener() {
+    window.addEventListener('storage', (event) => {
+        if (event.key && event.key.startsWith('chat-update-')) {
+            const roomCode = getCurrentRoom();
+            if (event.key === `chat-update-${roomCode}`) {
+                // Reload chat messages when another tab sends a message
+                setTimeout(() => {
+                    loadChatMessages();
+                }, 100);
+            }
+        }
+        
+        if (event.key && event.key.startsWith('workout-data-')) {
+            // Also listen for workout data changes for leaderboard updates
+            checkForLeaderboardUpdates();
+        }
+    });
+    
+    console.log('Cross-tab chat listener set up');
+}
+
+function triggerCrossTabChatUpdate() {
+    const roomCode = getCurrentRoom();
+    const updateKey = `chat-update-${roomCode}`;
+    
+    // Set a temporary value to trigger storage event in other tabs
+    localStorage.setItem(updateKey, Date.now().toString());
+    
+    // Remove it immediately (we just need to trigger the event)
+    setTimeout(() => {
+        localStorage.removeItem(updateKey);
+    }, 100);
+}
+
+function setupPubNubChatListener() {
+    // For localStorage-based system, this is handled by setupCrossTabChatListener
+    console.log('Using cross-tab localStorage chat system');
+}
+
+function stopPubNubChatListener() {
+    // No need to stop localStorage events
+    console.log('Cross-tab chat continues running');
 }
 
 function addMessageToChat(messageData) {
@@ -1828,22 +1921,27 @@ function saveChatMessage(messageData) {
 }
 
 function loadChatMessages() {
-    const roomCode = getCurrentRoom();
-    const chatKey = `chat-${roomCode}`;
-    
-    const roomChat = JSON.parse(localStorage.getItem(chatKey) || '[]');
-    const chatMessagesContainer = document.getElementById('chat-messages');
-    
-    if (!chatMessagesContainer) return;
-    
-    chatMessagesContainer.innerHTML = '';
-    
-    roomChat.forEach(messageData => {
-        addMessageToChat(messageData);
-    });
-    
-    // Update the last known message count
-    lastMessageCount = roomChat.length;
+    // Use PubNub if available, otherwise use local storage
+    if (isRealtimeChatEnabled) {
+        loadPubNubChatHistory();
+    } else {
+        const roomCode = getCurrentRoom();
+        const chatKey = `chat-${roomCode}`;
+        
+        const roomChat = JSON.parse(localStorage.getItem(chatKey) || '[]');
+        const chatMessagesContainer = document.getElementById('chat-messages');
+        
+        if (!chatMessagesContainer) return;
+        
+        chatMessagesContainer.innerHTML = '';
+        
+        roomChat.forEach(messageData => {
+            addMessageToChat(messageData);
+        });
+        
+        // Update the last known message count
+        lastMessageCount = roomChat.length;
+    }
 }
 
 function setupChatInput() {
