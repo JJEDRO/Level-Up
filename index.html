@@ -7,6 +7,10 @@
     <meta name="description" content="Gamified workout tracker for competing with friends. Track exercises, earn points, and level up together!">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css?v=5">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
     <div class="container">
@@ -71,6 +75,7 @@
             <div class="chat-container">
                 <div class="chat-header">
                     <h4>💬 Live Chat</h4>
+                    <span id="chat-status" class="chat-status">📱 Local</span>
                     <button onclick="toggleChat()" id="chat-toggle" class="chat-toggle">▼</button>
                 </div>
                 <div id="chat-box" class="chat-box">

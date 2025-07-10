@@ -17,6 +17,65 @@ const GITHUB_CONFIG = {
     filename: 'workout-data.json'
 };
 
+// Firebase configuration for real-time multiplayer chat
+// Using Firebase v9 compat mode for easier integration
+const firebaseConfig = {
+    apiKey: "AIzaSyAaE6nHLYlQ3XQKc-R7lQ6Sc8_RJ3UgVm8",
+    authDomain: "level-up-demo-2025.firebaseapp.com",
+    databaseURL: "https://level-up-demo-2025-default-rtdb.firebaseio.com/",
+    projectId: "level-up-demo-2025",
+    storageBucket: "level-up-demo-2025.appspot.com",
+    messagingSenderId: "123456789012",
+    appId: "1:123456789012:web:abcdef123456"
+};
+
+// Firebase variables
+let firebaseApp = null;
+let firebaseDatabase = null;
+let chatListener = null;
+
+// Initialize Firebase for multiplayer chat
+function initializeFirebase() {
+    try {
+        if (typeof firebase !== 'undefined') {
+            updateChatStatus('🔄 Connecting...', 'connecting');
+            
+            firebaseApp = firebase.initializeApp(firebaseConfig);
+            firebaseDatabase = firebase.database();
+            
+            // Test connection
+            firebaseDatabase.ref('.info/connected').on('value', (snapshot) => {
+                if (snapshot.val()) {
+                    console.log('🔥 Firebase connected - Multiplayer chat enabled!');
+                    updateChatStatus('🌐 Multiplayer', 'connected');
+                    showNotification('🌐 Multiplayer chat connected!', 'success');
+                } else {
+                    console.log('🔥 Firebase disconnected');
+                    updateChatStatus('📱 Local Only', '');
+                }
+            });
+            
+            return true;
+        } else {
+            console.warn('Firebase SDK not loaded, using localStorage for chat');
+            updateChatStatus('📱 Local Only', '');
+            return false;
+        }
+    } catch (error) {
+        console.warn('Firebase initialization failed, using localStorage for chat:', error);
+        updateChatStatus('📱 Local Only', '');
+        return false;
+    }
+}
+
+function updateChatStatus(text, className = '') {
+    const statusElement = document.getElementById('chat-status');
+    if (statusElement) {
+        statusElement.textContent = text;
+        statusElement.className = 'chat-status ' + className;
+    }
+}
+
 // Initialize default data
 function initializeDefaultData() {
     // Only add the current authenticated user to userData
@@ -137,8 +196,20 @@ function generateRoomCode() {
 function joinRoom(roomCode) {
     if (!roomCode) return false;
     
+    // Stop any existing chat listener
+    stopFirebaseChatListener();
+    
     localStorage.setItem('workout-room-code', roomCode);
+    
+    // Set up Firebase chat listener for this room
+    setTimeout(() => {
+        setupFirebaseChatListener();
+        loadFirebaseChatHistory();
+    }, 500);
+    
     showNotification(`Joined room: ${roomCode}`, 'success');
+    sendSystemMessage(`${currentAuthUser?.username || 'User'} joined the room`);
+    
     return true;
 }
 
@@ -258,8 +329,16 @@ function startAutoSave() {
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', async function() {
-    // Set up localStorage event listener for cross-tab real-time chat
-    setupCrossTabChatListener();
+    // Initialize Firebase for multiplayer chat
+    const firebaseReady = initializeFirebase();
+    
+    // Set up chat listeners (Firebase or localStorage fallback)
+    if (firebaseReady) {
+        console.log('🔥 Using Firebase for real-time multiplayer chat');
+    } else {
+        console.log('📱 Using localStorage for cross-tab chat');
+        setupCrossTabChatListener();
+    }
     
     // Load saved GitHub configuration
     const savedGistId = localStorage.getItem('workout-gist-id');
@@ -1799,11 +1878,14 @@ function sendMessage() {
         roomCode: getCurrentRoom()
     };
     
-    addMessageToChat(messageData);
-    saveChatMessage(messageData);
-    
-    // Trigger cross-tab update
-    triggerCrossTabChatUpdate();
+    // Try Firebase first, fallback to localStorage
+    if (firebaseDatabase) {
+        sendMessageToFirebase(messageData);
+    } else {
+        addMessageToChat(messageData);
+        saveChatMessage(messageData);
+        triggerCrossTabChatUpdate();
+    }
     
     input.value = '';
     input.focus();
@@ -1820,11 +1902,109 @@ function sendSystemMessage(message) {
         roomCode: getCurrentRoom()
     };
     
-    addMessageToChat(messageData);
-    saveChatMessage(messageData);
+    // Try Firebase first, fallback to localStorage
+    if (firebaseDatabase) {
+        sendMessageToFirebase(messageData);
+    } else {
+        addMessageToChat(messageData);
+        saveChatMessage(messageData);
+        triggerCrossTabChatUpdate();
+    }
+}
+
+// Firebase real-time chat functions
+function sendMessageToFirebase(messageData) {
+    if (!firebaseDatabase) {
+        console.warn('Firebase not available, falling back to localStorage');
+        addMessageToChat(messageData);
+        saveChatMessage(messageData);
+        triggerCrossTabChatUpdate();
+        return;
+    }
     
-    // Trigger cross-tab update
-    triggerCrossTabChatUpdate();
+    const roomCode = getCurrentRoom();
+    const chatRef = firebaseDatabase.ref(`chats/${roomCode}/messages`);
+    
+    // Push message to Firebase
+    chatRef.push(messageData).then(() => {
+        console.log('💬 Message sent to Firebase');
+    }).catch((error) => {
+        console.error('Error sending message to Firebase:', error);
+        // Fallback to localStorage
+        addMessageToChat(messageData);
+        saveChatMessage(messageData);
+        triggerCrossTabChatUpdate();
+    });
+}
+
+function setupFirebaseChatListener() {
+    if (!firebaseDatabase) {
+        console.warn('Firebase not available, using localStorage chat');
+        setupCrossTabChatListener();
+        return;
+    }
+    
+    const roomCode = getCurrentRoom();
+    const chatRef = firebaseDatabase.ref(`chats/${roomCode}/messages`);
+    
+    // Remove existing listener
+    if (chatListener) {
+        chatListener.off();
+    }
+    
+    // Listen for new messages
+    chatListener = chatRef.on('child_added', (snapshot) => {
+        const messageData = snapshot.val();
+        if (messageData && messageData.roomCode === roomCode) {
+            // Check if message is not from current user to avoid duplicates
+            if (messageData.userId !== currentAuthUser?.id || 
+                messageData.type === 'system') {
+                addMessageToChat(messageData);
+            }
+        }
+    });
+    
+    console.log(`🔥 Listening for real-time messages in room: ${roomCode}`);
+}
+
+function stopFirebaseChatListener() {
+    if (chatListener && firebaseDatabase) {
+        chatListener.off();
+        chatListener = null;
+        console.log('🔥 Stopped Firebase chat listener');
+    }
+}
+
+function loadFirebaseChatHistory() {
+    if (!firebaseDatabase) {
+        console.warn('Firebase not available, loading local chat history');
+        loadChatMessages();
+        return;
+    }
+    
+    const roomCode = getCurrentRoom();
+    const chatRef = firebaseDatabase.ref(`chats/${roomCode}/messages`);
+    
+    // Load recent messages (last 50)
+    chatRef.limitToLast(50).once('value').then((snapshot) => {
+        const chatMessagesContainer = document.getElementById('chat-messages');
+        if (!chatMessagesContainer) return;
+        
+        chatMessagesContainer.innerHTML = '';
+        
+        snapshot.forEach((childSnapshot) => {
+            const messageData = childSnapshot.val();
+            if (messageData && messageData.roomCode === roomCode) {
+                addMessageToChat(messageData);
+            }
+        });
+        
+        console.log('🔥 Loaded chat history from Firebase');
+    }).catch((error) => {
+        console.error('Error loading chat history from Firebase:', error);
+        // Fallback to local storage
+        loadChatMessages();
+    });
 }
 
 // Cross-tab real-time chat using localStorage events
