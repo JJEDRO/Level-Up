@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Level-Up Workout Tracker</title>
+    <meta name="description" content="Gamified workout tracker for competing with friends. Track exercises, earn points, and level up together!">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏋️ Level-Up Workout Tracker</h1>
+            
+            <!-- User Authentication Section -->
+            <div id="auth-section" class="auth-section">
+            <div class="auth-tabs">
+                <button class="auth-tab-btn active" data-tab="login">Login</button>
+                <button class="auth-tab-btn" data-tab="signup">Sign Up</button>
+            </div>
+            
+            <form id="login-form" class="auth-form active">
+                <h3>Welcome Back!</h3>
+                <input type="text" id="login-username" placeholder="Username" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <button type="submit" class="auth-btn">Login</button>
+            </form>
+            
+            <form id="signup-form" class="auth-form">
+                <h3>Create Account</h3>
+                <input type="text" id="signup-username" placeholder="Choose Username" required>
+                <input type="email" id="signup-email" placeholder="Email Address" required>
+                <input type="password" id="signup-password" placeholder="Choose Password" required>
+                <button type="submit" class="auth-btn">Sign Up</button>
+            </form>
+            
+            <div class="guest-option">
+                <button id="guest-btn" class="guest-btn">Continue as Guest</button>
+            </div>
+            </div>
+
+        <!-- Main App Section (hidden until authenticated) -->
+        <div id="app-content" class="app-content hidden">
+            <div id="user-info" class="user-info" style="display: none;">
+                <span>Welcome, <strong id="user-display-name">User</strong>!</span>
+                <button id="logout-btn" class="logout-btn">Logout</button>
+            </div>
+                
+                <div class="user-selector">
+                    <label for="current-user">Select User:</label>
+                    <select id="current-user">
+                        <option value="user1">User 1</option>
+                        <option value="user2">User 2</option>
+                        <option value="user3">User 3</option>
+                        <option value="user4">User 4</option>
+                    </select>
+                    <button id="add-user-btn">Add User</button>
+                </div>
+                <div class="room-controls">
+                    <button onclick="createWorkoutRoom()" class="room-btn">🏠 New Room</button>
+                    <button onclick="joinWorkoutRoom()" class="room-btn">🚪 Join Room</button>
+                    <button onclick="setupGitHubSharing()" class="github-btn">🌐 GitHub Sync</button>
+                </div>
+                <div class="score-display">
+                    <h2>Total Points: <span id="total-points">0</span></h2>
+                    <h3>Today's Points: <span id="today-points">0</span></h3>
+                    <div class="real-time-updates">
+                        <h4>Recent Activity</h4>
+                        <div id="activity-feed"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Tabs and content only show when authenticated -->
+        <div id="app-content" class="app-content hidden">
+
+        <!-- Tabs and content only show when authenticated -->
+        <div id="app-content" class="app-content hidden">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="openTab(event, 'main-workout')">Main Workout</button>
+            <button class="tab-btn" onclick="openTab(event, 'second-workout')">2nd Workout</button>
+            <button class="tab-btn" onclick="openTab(event, 'mobility-workout')">Mobility & Stretching</button>
+            <button class="tab-btn" onclick="openTab(event, 'basic-exercises')">Basic Exercises</button>
+            <button class="tab-btn" onclick="openTab(event, 'elite-challenges')">Elite Challenges</button>
+            <button class="tab-btn" onclick="openTab(event, 'workout-quests')">Workout Quests</button>
+            <button class="tab-btn" onclick="openTab(event, 'side-quests')">Side Quests</button>
+            <button class="tab-btn" onclick="openTab(event, 'leaderboard')">Leaderboard</button>
+        </div>
+
+        <!-- Main Workout Tab -->
+        <div id="main-workout" class="tab-content active">
+            <h2>1st Workout 👍 (Total: 1,720 points)</h2>
+            <div class="workout-grid">
+                <div class="exercise-card">
+                    <h3>Pushups</h3>
+                    <p>Target: 30 reps</p>
+                    <input type="number" id="pushups-main" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('pushups-main', 30, 300)">Complete (300 pts)</button>
+                    <span class="status" id="pushups-main-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Jump Squats</h3>
+                    <p>Target: 120 reps</p>
+                    <input type="number" id="jump-squats-main" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('jump-squats-main', 120, 40)">Complete (40 pts)</button>
+                    <span class="status" id="jump-squats-main-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Plank</h3>
+                    <p>Target: 2 minutes</p>
+                    <input type="number" id="plank-main" placeholder="Seconds completed" min="0">
+                    <button onclick="completeExercise('plank-main', 120, 200)">Complete (200 pts)</button>
+                    <span class="status" id="plank-main-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Knee Pushups</h3>
+                    <p>Target: 120 reps</p>
+                    <input type="number" id="knee-pushups-main" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('knee-pushups-main', 120, 60)">Complete (60 pts)</button>
+                    <span class="status" id="knee-pushups-main-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Situps</h3>
+                    <p>Target: 150 reps</p>
+                    <input type="number" id="situps-main" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('situps-main', 150, 120)">Complete (120 pts)</button>
+                    <span class="status" id="situps-main-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Jumping Jacks</h3>
+                    <p>Target: 400 reps</p>
+                    <input type="number" id="jumping-jacks-main" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('jumping-jacks-main', 400, 1000)">Complete (1000 pts)</button>
+                    <span class="status" id="jumping-jacks-main-status"></span>
+                </div>
+            </div>
+            <button class="complete-workout-btn" onclick="completeFullWorkout('main', 1720)">Complete Full Main Workout</button>
+        </div>
+
+        <!-- Second Workout Tab -->
+        <div id="second-workout" class="tab-content">
+            <h2>2nd Workout for more points! (Total: 2,990 points)</h2>
+            <div class="workout-grid">
+                <div class="exercise-card">
+                    <h3>Pushups</h3>
+                    <p>Target: 15 reps</p>
+                    <input type="number" id="pushups-second" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('pushups-second', 15, 150)">Complete (150 pts)</button>
+                    <span class="status" id="pushups-second-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Plank</h3>
+                    <p>Target: 3 minutes</p>
+                    <input type="number" id="plank-second" placeholder="Seconds completed" min="0">
+                    <button onclick="completeExercise('plank-second', 180, 300)">Complete (300 pts)</button>
+                    <span class="status" id="plank-second-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Burpees</h3>
+                    <p>Target: 50 reps</p>
+                    <input type="number" id="burpees-second" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('burpees-second', 50, 2500)">Complete (2500 pts)</button>
+                    <span class="status" id="burpees-second-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Normal Squats</h3>
+                    <p>Target: 40 reps</p>
+                    <input type="number" id="squats-second" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('squats-second', 40, 40)">Complete (40 pts)</button>
+                    <span class="status" id="squats-second-status"></span>
+                </div>
+            </div>
+            <button class="complete-workout-btn" onclick="completeFullWorkout('second', 2990)">Complete Full 2nd Workout</button>
+        </div>
+
+        <!-- Mobility & Stretching Tab -->
+        <div id="mobility-workout" class="tab-content">
+            <h2>3rd Workout - Mobility & Stretching (Total: 440 points)</h2>
+            
+            <h3>Warm-up</h3>
+            <div class="workout-grid">
+                <div class="exercise-card">
+                    <h3>Jumping Jacks</h3>
+                    <p>Target: 60 seconds</p>
+                    <input type="number" id="jj-warmup" placeholder="Seconds completed" min="0">
+                    <button onclick="completeExercise('jj-warmup', 60, 30)">Complete (30 pts)</button>
+                    <span class="status" id="jj-warmup-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Arm Circles</h3>
+                    <p>Target: 60 seconds</p>
+                    <input type="number" id="arm-circles-warmup" placeholder="Seconds completed" min="0">
+                    <button onclick="completeExercise('arm-circles-warmup', 60, 30)">Complete (30 pts)</button>
+                    <span class="status" id="arm-circles-warmup-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Hip Circles</h3>
+                    <p>Target: 60 seconds</p>
+                    <input type="number" id="hip-circles-warmup" placeholder="Seconds completed" min="0">
+                    <button onclick="completeExercise('hip-circles-warmup', 60, 20)">Complete (20 pts)</button>
+                    <span class="status" id="hip-circles-warmup-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Bodyweight Squats</h3>
+                    <p>Target: 20 reps</p>
+                    <input type="number" id="bw-squats-warmup" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('bw-squats-warmup', 20, 20)">Complete (20 pts)</button>
+                    <span class="status" id="bw-squats-warmup-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Walking Toe Touches</h3>
+                    <p>Target: 30 steps</p>
+                    <input type="number" id="toe-touches-warmup" placeholder="Steps completed" min="0">
+                    <button onclick="completeExercise('toe-touches-warmup', 30, 20)">Complete (20 pts)</button>
+                    <span class="status" id="toe-touches-warmup-status"></span>
+                </div>
+            </div>
+
+            <h3>Mobility Work</h3>
+            <div class="workout-grid">
+                <div class="exercise-card"><h4>World's Greatest Stretch</h4><input type="checkbox" id="wgs"><button onclick="completeSimpleExercise('wgs', 20)">Complete (20 pts)</button></div>
+                <div class="exercise-card"><h4>90/90 Hip Rotations</h4><input type="checkbox" id="hip-rot"><button onclick="completeSimpleExercise('hip-rot', 20)">Complete (20 pts)</button></div>
+                <div class="exercise-card"><h4>Cat-Cow Stretch</h4><input type="checkbox" id="cat-cow"><button onclick="completeSimpleExercise('cat-cow', 20)">Complete (20 pts)</button></div>
+                <div class="exercise-card"><h4>Kneeling Thoracic Rotations</h4><input type="checkbox" id="thoracic"><button onclick="completeSimpleExercise('thoracic', 20)">Complete (20 pts)</button></div>
+                <div class="exercise-card"><h4>Ankle Rocks</h4><input type="checkbox" id="ankle-rocks"><button onclick="completeSimpleExercise('ankle-rocks', 20)">Complete (20 pts)</button></div>
+                <div class="exercise-card"><h4>Bretzel Stretch</h4><input type="checkbox" id="bretzel"><button onclick="completeSimpleExercise('bretzel', 20)">Complete (20 pts)</button></div>
+            </div>
+
+            <h3>Activation Exercises</h3>
+            <div class="workout-grid">
+                <div class="exercise-card">
+                    <h4>Banded Glute Bridges</h4>
+                    <p>Target: 15 reps</p>
+                    <input type="number" id="glute-bridges" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('glute-bridges', 15, 20)">Complete (20 pts)</button>
+                    <span class="status" id="glute-bridges-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h4>Side-Lying Clamshells</h4>
+                    <p>Target: 10 reps each side</p>
+                    <input type="number" id="clamshells" placeholder="Total reps completed" min="0">
+                    <button onclick="completeExercise('clamshells', 20, 20)">Complete (20 pts)</button>
+                    <span class="status" id="clamshells-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h4>Banded Shoulder External Rotations</h4>
+                    <p>Target: 12 reps each arm</p>
+                    <input type="number" id="shoulder-rot" placeholder="Total reps completed" min="0">
+                    <button onclick="completeExercise('shoulder-rot', 24, 20)">Complete (20 pts)</button>
+                    <span class="status" id="shoulder-rot-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h4>Dead Bug Core Holds</h4>
+                    <p>Target: 8 reps each side</p>
+                    <input type="number" id="dead-bug" placeholder="Total reps completed" min="0">
+                    <button onclick="completeExercise('dead-bug', 16, 20)">Complete (20 pts)</button>
+                    <span class="status" id="dead-bug-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h4>Heel Walks + Toe Walks</h4>
+                    <p>Target: 20 steps each</p>
+                    <input type="number" id="heel-toe" placeholder="Total steps completed" min="0">
+                    <button onclick="completeExercise('heel-toe', 40, 20)">Complete (20 pts)</button>
+                    <span class="status" id="heel-toe-status"></span>
+                </div>
+            </div>
+
+            <h3>Cool-down Stretches</h3>
+            <div class="workout-grid">
+                <div class="exercise-card"><h4>Seated Hamstring Stretch</h4><input type="checkbox" id="hamstring"><button onclick="completeSimpleExercise('hamstring', 20)">Complete (20 pts)</button></div>
+                <div class="exercise-card"><h4>Standing Quad Stretch</h4><input type="checkbox" id="quad"><button onclick="completeSimpleExercise('quad', 20)">Complete (20 pts)</button></div>
+                <div class="exercise-card"><h4>Pigeon Pose</h4><input type="checkbox" id="pigeon"><button onclick="completeSimpleExercise('pigeon', 20)">Complete (20 pts)</button></div>
+                <div class="exercise-card"><h4>Couch Stretch</h4><input type="checkbox" id="couch"><button onclick="completeSimpleExercise('couch', 20)">Complete (20 pts)</button></div>
+                <div class="exercise-card"><h4>Chest Doorway Stretch</h4><input type="checkbox" id="chest"><button onclick="completeSimpleExercise('chest', 20)">Complete (20 pts)</button></div>
+                <div class="exercise-card"><h4>Wrist Stretches</h4><input type="checkbox" id="wrist"><button onclick="completeSimpleExercise('wrist', 20)">Complete (20 pts)</button></div>
+                <div class="exercise-card"><h4>Calf Stretch</h4><input type="checkbox" id="calf"><button onclick="completeSimpleExercise('calf', 20)">Complete (20 pts)</button></div>
+            </div>
+            <button class="complete-workout-btn" onclick="completeFullWorkout('mobility', 440)">Complete Full Mobility Workout</button>
+        </div>
+
+        <!-- Basic Exercises Tab -->
+        <div id="basic-exercises" class="tab-content">
+            <h2>Basic Exercises (Total: 530 points)</h2>
+            <div class="workout-grid">
+                <div class="exercise-card">
+                    <h3>Normal Squats</h3>
+                    <p>Target: 40 reps</p>
+                    <input type="number" id="normal-squats" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('normal-squats', 40, 40)">Complete (40 pts)</button>
+                    <span class="status" id="normal-squats-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Jumping Jacks</h3>
+                    <p>Target: 50 reps</p>
+                    <input type="number" id="jj-basic" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('jj-basic', 50, 100)">Complete (100 pts)</button>
+                    <span class="status" id="jj-basic-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Calf Raises</h3>
+                    <p>Target: 50 reps</p>
+                    <input type="number" id="calf-raises" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('calf-raises', 50, 50)">Complete (50 pts)</button>
+                    <span class="status" id="calf-raises-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Glute Bridges</h3>
+                    <p>Target: 25 reps</p>
+                    <input type="number" id="glute-bridges-basic" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('glute-bridges-basic', 25, 75)">Complete (75 pts)</button>
+                    <span class="status" id="glute-bridges-basic-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Arm Circles</h3>
+                    <p>Target: 30 sec/direction</p>
+                    <input type="number" id="arm-circles-basic" placeholder="Seconds completed" min="0">
+                    <button onclick="completeExercise('arm-circles-basic', 60, 25)">Complete (25 pts)</button>
+                    <span class="status" id="arm-circles-basic-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>High Knees</h3>
+                    <p>Target: 60 seconds</p>
+                    <input type="number" id="high-knees" placeholder="Seconds completed" min="0">
+                    <button onclick="completeExercise('high-knees', 60, 120)">Complete (120 pts)</button>
+                    <span class="status" id="high-knees-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Butt Kicks</h3>
+                    <p>Target: 60 seconds</p>
+                    <input type="number" id="butt-kicks" placeholder="Seconds completed" min="0">
+                    <button onclick="completeExercise('butt-kicks', 60, 120)">Complete (120 pts)</button>
+                    <span class="status" id="butt-kicks-status"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Elite Challenges Tab -->
+        <div id="elite-challenges" class="tab-content">
+            <h2>Elite Fitness Challenges (Total: 20,800 points)</h2>
+            <div class="workout-grid">
+                <div class="exercise-card elite">
+                    <h3>Burpees</h3>
+                    <p>Target: 50 reps</p>
+                    <input type="number" id="burpees-elite" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('burpees-elite', 50, 2500)">Complete (2500 pts)</button>
+                    <span class="status" id="burpees-elite-status"></span>
+                </div>
+                <div class="exercise-card elite">
+                    <h3>Run a 5k</h3>
+                    <p>Complete the distance</p>
+                    <input type="checkbox" id="run-5k">
+                    <button onclick="completeSimpleExercise('run-5k', 5000)">Complete (5000 pts)</button>
+                </div>
+                <div class="exercise-card elite">
+                    <h3>100 Push-up Challenge</h3>
+                    <p>Target: 100 reps</p>
+                    <input type="number" id="pushups-100" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('pushups-100', 100, 1500)">Complete (1500 pts)</button>
+                    <span class="status" id="pushups-100-status"></span>
+                </div>
+                <div class="exercise-card elite">
+                    <h3>Murph Prep</h3>
+                    <p>1-mile run, 10k jumping jacks, 50 Push-ups, 75 Squats, 1-mile run</p>
+                    <input type="checkbox" id="murph-prep">
+                    <button onclick="completeSimpleExercise('murph-prep', 10000)">Complete (10000 pts)</button>
+                </div>
+                <div class="exercise-card elite">
+                    <h3>Handstand Hold</h3>
+                    <p>Target: 60 seconds</p>
+                    <input type="number" id="handstand" placeholder="Seconds completed" min="0">
+                    <button onclick="completeExercise('handstand', 60, 1000)">Complete (1000 pts)</button>
+                    <span class="status" id="handstand-status"></span>
+                </div>
+                <div class="exercise-card elite">
+                    <h3>Muscle-up</h3>
+                    <p>Target: 1 rep</p>
+                    <input type="number" id="muscle-up" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('muscle-up', 1, 800)">Complete (800 pts)</button>
+                    <span class="status" id="muscle-up-status"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workout Quests Tab -->
+        <div id="workout-quests" class="tab-content">
+            <h2>Workout Quests (Total: 1,675 points)</h2>
+            <div class="workout-grid">
+                <div class="exercise-card">
+                    <h3>Push-ups</h3>
+                    <p>Target: 15 reps</p>
+                    <input type="number" id="pushups-quest" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('pushups-quest', 15, 150)">Complete (150 pts)</button>
+                    <span class="status" id="pushups-quest-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Lunges (each leg)</h3>
+                    <p>Target: 20 reps</p>
+                    <input type="number" id="lunges-quest" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('lunges-quest', 20, 200)">Complete (200 pts)</button>
+                    <span class="status" id="lunges-quest-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Crunches</h3>
+                    <p>Target: 30 reps</p>
+                    <input type="number" id="crunches-quest" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('crunches-quest', 30, 300)">Complete (300 pts)</button>
+                    <span class="status" id="crunches-quest-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Leg Raises</h3>
+                    <p>Target: 25 reps</p>
+                    <input type="number" id="leg-raises-quest" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('leg-raises-quest', 25, 250)">Complete (250 pts)</button>
+                    <span class="status" id="leg-raises-quest-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Tricep Dips (Chair)</h3>
+                    <p>Target: 15 reps</p>
+                    <input type="number" id="tricep-dips-quest" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('tricep-dips-quest', 15, 225)">Complete (225 pts)</button>
+                    <span class="status" id="tricep-dips-quest-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Pike Push-ups</h3>
+                    <p>Target: 10 reps</p>
+                    <input type="number" id="pike-pushups-quest" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('pike-pushups-quest', 10, 200)">Complete (200 pts)</button>
+                    <span class="status" id="pike-pushups-quest-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Incline Push-ups</h3>
+                    <p>Target: 20 reps</p>
+                    <input type="number" id="incline-pushups-quest" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('incline-pushups-quest', 20, 150)">Complete (150 pts)</button>
+                    <span class="status" id="incline-pushups-quest-status"></span>
+                </div>
+                <div class="exercise-card">
+                    <h3>Diamond Push-ups</h3>
+                    <p>Target: 10 reps</p>
+                    <input type="number" id="diamond-pushups-quest" placeholder="Reps completed" min="0">
+                    <button onclick="completeExercise('diamond-pushups-quest', 10, 200)">Complete (200 pts)</button>
+                    <span class="status" id="diamond-pushups-quest-status"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Side Quests Tab -->
+        <div id="side-quests" class="tab-content">
+            <h2>Side Quests 😃 (Total: 1,800 points)</h2>
+            <div class="workout-grid">
+                <div class="exercise-card side-quest">
+                    <h3>Fully Edit Video</h3>
+                    <p>With recap total and showing everything</p>
+                    <input type="checkbox" id="edit-video">
+                    <button onclick="completeSimpleExercise('edit-video', 2000)">Complete (2000 pts)</button>
+                </div>
+                <div class="exercise-card side-quest">
+                    <h3>Main Workout Twice</h3>
+                    <p>Do the full main workout twice</p>
+                    <input type="checkbox" id="main-twice">
+                    <button onclick="completeSimpleExercise('main-twice', 500)">Complete (500 pts)</button>
+                </div>
+                <div class="exercise-card side-quest">
+                    <h3>Stretching 5-10 minutes</h3>
+                    <p>With timer to show progress</p>
+                    <input type="checkbox" id="stretching-timer">
+                    <button onclick="completeSimpleExercise('stretching-timer', 50)">Complete (50 pts)</button>
+                </div>
+                <div class="exercise-card side-quest">
+                    <h3>2nd Workout Twice</h3>
+                    <p>Do the 2nd workout twice</p>
+                    <input type="checkbox" id="second-twice">
+                    <button onclick="completeSimpleExercise('second-twice', 1000)">Complete (1000 pts)</button>
+                </div>
+                <div class="exercise-card side-quest">
+                    <h3>3rd Workout Twice</h3>
+                    <p>Do the mobility workout twice</p>
+                    <input type="checkbox" id="third-twice">
+                    <button onclick="completeSimpleExercise('third-twice', 800)">Complete (800 pts)</button>
+                </div>
+            </div>
+
+            <h3>Negative Points 🥲</h3>
+            <div class="negative-points">
+                <button class="negative-btn" onclick="applyNegativePoints('miscount', 50)">Not fully counting reps (-50 pts)</button>
+                <button class="negative-btn" onclick="applyNegativePoints('no-video', 3000)">Not editing video (-3000 pts)</button>
+                <button class="negative-btn" onclick="applyNegativePoints('no-stretch', 50)">Not stretching (-50 pts)</button>
+                <button class="negative-btn" onclick="applyNegativePoints('skip-main', 150)">Not doing full main workout (-150 pts)</button>
+            </div>
+        </div>
+
+        <!-- Leaderboard Tab -->
+        <div id="leaderboard" class="tab-content">
+            <h2>🏆 Leaderboard</h2>
+            <div class="leaderboard-container">
+                <div class="leaderboard-header">
+                    <button onclick="syncData()" class="sync-btn">🔄 Sync Data</button>
+                    <button onclick="createBackup()" class="backup-btn">💾 Backup</button>
+                    <button onclick="resetAllData()" class="reset-btn">Reset All Data</button>
+                    <button onclick="exportData()" class="export-btn">Export Data</button>
+                </div>
+                <div id="leaderboard-list"></div>
+            </div>
+            
+            <h3>Daily Progress</h3>
+            <div id="daily-progress"></div>
+            
+            <h3>Achievement Badges</h3>
+            <div id="achievements"></div>
+        </div>
+        </div> <!-- End app-content -->
+    </div>
+
+    <script src="script-github.js?v=3"></script>
+</body>
+</html>
