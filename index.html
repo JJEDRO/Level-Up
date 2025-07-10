@@ -6,7 +6,7 @@
     <title>Level-Up Workout Tracker</title>
     <meta name="description" content="Gamified workout tracker for competing with friends. Track exercises, earn points, and level up together!">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="styles.css?v=3">
+    <link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body>
     <div class="container">
@@ -46,38 +46,54 @@
                 <span>Welcome, <strong id="user-display-name">User</strong>!</span>
                 <button id="logout-btn" class="logout-btn">Logout</button>
             </div>
-                
-                <div class="user-selector">
-                    <label for="current-user">Select User:</label>
-                    <select id="current-user">
-                        <option value="user1">User 1</option>
-                        <option value="user2">User 2</option>
-                        <option value="user3">User 3</option>
-                        <option value="user4">User 4</option>
-                    </select>
-                    <button id="add-user-btn">Add User</button>
+            
+            <div class="room-controls">
+                <div class="current-room">
+                    <span>Room: <strong id="room-code">DEFAULT</strong></span>
                 </div>
-                <div class="room-controls">
-                    <button onclick="createWorkoutRoom()" class="room-btn">🏠 New Room</button>
-                    <button onclick="joinWorkoutRoom()" class="room-btn">🚪 Join Room</button>
-                    <button onclick="setupGitHubSharing()" class="github-btn">🌐 GitHub Sync</button>
+                <button onclick="createWorkoutRoom()" class="room-btn">🏠 New Room</button>
+                <button onclick="joinWorkoutRoom()" class="room-btn">🚪 Join Room</button>
+                <button onclick="setupGitHubSharing()" class="github-btn">🌐 GitHub Sync</button>
+            </div>
+            
+            <!-- Workout Controls -->
+            <div class="workout-controls">
+                <button id="start-workout-btn" onclick="startWorkout()" class="start-workout-btn">
+                    🏋️ Start Working Out!
+                </button>
+                <div id="workout-status" class="workout-status hidden">
+                    <span class="status-text">💪 Workout in progress...</span>
+                    <button onclick="endWorkout()" class="end-workout-btn">Finish Workout</button>
                 </div>
-                <div class="score-display">
-                    <h2>Total Points: <span id="total-points">0</span></h2>
-                    <h3>Today's Points: <span id="today-points">0</span></h3>
-                    <div class="real-time-updates">
-                        <h4>Recent Activity</h4>
-                        <div id="activity-feed"></div>
+            </div>
+            
+            <!-- Live Chat -->
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h4>💬 Live Chat</h4>
+                    <button onclick="toggleChat()" id="chat-toggle" class="chat-toggle">▼</button>
+                </div>
+                <div id="chat-box" class="chat-box">
+                    <div id="chat-messages" class="chat-messages"></div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chat-input" placeholder="Type a message..." maxlength="200">
+                        <button onclick="sendMessage()" class="send-btn">Send</button>
                     </div>
                 </div>
             </div>
+            
+            <div class="score-display">
+                <h2>Total Points: <span id="total-points">0</span></h2>
+                <h3>Today's Points: <span id="today-points">0</span></h3>
+                <div class="real-time-updates">
+                    <h4>Recent Activity</h4>
+                    <div id="activity-feed"></div>
+                </div>
+            </div>
+        </div>
         </header>
 
         <!-- Tabs and content only show when authenticated -->
-        <div id="app-content" class="app-content hidden">
-
-        <!-- Tabs and content only show when authenticated -->
-        <div id="app-content" class="app-content hidden">
         <div class="tabs">
             <button class="tab-btn active" onclick="openTab(event, 'main-workout')">Main Workout</button>
             <button class="tab-btn" onclick="openTab(event, 'second-workout')">2nd Workout</button>
@@ -511,8 +527,7 @@
             <div id="achievements"></div>
         </div>
         </div> <!-- End app-content -->
-    </div>
 
-    <script src="script-github.js?v=3"></script>
+    <script src="script-github.js?v=5"></script>
 </body>
 </html>

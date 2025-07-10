@@ -16,12 +16,27 @@ const GITHUB_CONFIG = {
 
 // Initialize default data
 function initializeDefaultData() {
-    userData = {
-        user1: { name: 'User 1', totalPoints: 0, todayPoints: 0, completedExercises: {}, workoutHistory: [] },
-        user2: { name: 'User 2', totalPoints: 0, todayPoints: 0, completedExercises: {}, workoutHistory: [] },
-        user3: { name: 'User 3', totalPoints: 0, todayPoints: 0, completedExercises: {}, workoutHistory: [] },
-        user4: { name: 'User 4', totalPoints: 0, todayPoints: 0, completedExercises: {}, workoutHistory: [] }
-    };
+    // Only add the current authenticated user to userData
+    if (currentAuthUser) {
+        const userId = currentAuthUser.id;
+        if (!userData[userId]) {
+            userData[userId] = {
+                name: currentAuthUser.username,
+                totalPoints: 0,
+                todayPoints: 0,
+                completedExercises: {},
+                workoutHistory: []
+            };
+        }
+    } else {
+        // Fallback for non-authenticated users (shouldn't happen)
+        userData = {
+            user1: { name: 'User 1', totalPoints: 0, todayPoints: 0, completedExercises: {}, workoutHistory: [] },
+            user2: { name: 'User 2', totalPoints: 0, todayPoints: 0, completedExercises: {}, workoutHistory: [] },
+            user3: { name: 'User 3', totalPoints: 0, todayPoints: 0, completedExercises: {}, workoutHistory: [] },
+            user4: { name: 'User 4', totalPoints: 0, todayPoints: 0, completedExercises: {}, workoutHistory: [] }
+        };
+    }
     
     achievements = {
         'First Steps': { description: 'Complete your first exercise', earned: false, points: 0 },
@@ -124,6 +139,15 @@ function joinRoom(roomCode) {
     return true;
 }
 
+// Update room display
+function updateRoomDisplay() {
+    const roomCode = getCurrentRoom();
+    const roomElement = document.getElementById('room-code');
+    if (roomElement) {
+        roomElement.textContent = roomCode;
+    }
+}
+
 function getCurrentRoom() {
     return localStorage.getItem('workout-room-code') || 'DEFAULT';
 }
@@ -138,7 +162,8 @@ function saveToLocalStorage(data) {
             users: userData,
             achievements: achievements,
             lastUpdate: new Date().toISOString(),
-            room: roomCode
+            room: roomCode,
+            updateTrigger: Math.random() // Force change detection for real-time updates
         };
         
         localStorage.setItem(storageKey, JSON.stringify(compressedData));
@@ -161,6 +186,10 @@ function loadFromLocalStorage() {
             const data = JSON.parse(savedData);
             userData = data.users || data.userData || {};
             achievements = data.achievements || {};
+            
+            // Set initial data hash for leaderboard polling
+            lastDataHash = btoa(savedData).substring(0, 20);
+            
             showNotification(`Loaded room: ${roomCode}`, 'success');
             return true;
         } else {
@@ -347,6 +376,15 @@ function completeExercise(exerciseId, targetReps, points) {
     updateActivityFeed();
     checkAchievements(userId, earnedPoints);
     
+    // Trigger leaderboard update for other users
+    triggerLeaderboardUpdate();
+    
+    // Send chat message about exercise completion
+    if (earnedPoints > 0) {
+        const percentage = Math.round((completedReps / targetReps) * 100);
+        sendSystemMessage(`${currentAuthUser.username} completed ${exerciseId} (${completedReps}/${targetReps} - ${percentage}%) +${earnedPoints} pts! 💪`);
+    }
+    
     // Show points animation
     showPointsAnimation(earnedPoints);
 }
@@ -403,7 +441,14 @@ function completeSimpleExercise(exerciseId, points) {
     saveData();
     updateDisplay();
     updateLeaderboard();
-    checkAchievements();
+    updateActivityFeed();
+    checkAchievements(userId, points);
+    
+    // Trigger leaderboard update for other users
+    triggerLeaderboardUpdate();
+    
+    // Send chat message about exercise completion
+    sendSystemMessage(`${currentAuthUser.username} completed ${exerciseId} +${points} pts! ✅`);
     
     // Show points animation
     showPointsAnimation(points);
@@ -565,6 +610,14 @@ function updateLeaderboard() {
         `;
         
         leaderboardList.appendChild(item);
+        
+        // Add animation for newly updated items
+        setTimeout(() => {
+            item.classList.add('updated');
+            setTimeout(() => {
+                item.classList.remove('updated');
+            }, 2000);
+        }, index * 100); // Stagger the animations
     });
     
     // Update daily progress
@@ -646,6 +699,9 @@ function awardAchievement(achievementName, userId) {
     
     showNotification(`🏆 Achievement Unlocked: ${achievementName}! (+${bonusPoints} bonus points)`, 'success');
     saveData();
+    
+    // Trigger leaderboard update for other users
+    triggerLeaderboardUpdate();
 }
 
 // Update achievements display
@@ -843,10 +899,31 @@ async function createBackup() {
 function createWorkoutRoom() {
     const roomCode = generateRoomCode();
     if (joinRoom(roomCode)) {
-        initializeDefaultData();
-        saveData();
+        // Load data for the new room (will be empty for new room)
+        loadData();
+        
+        // Ensure current user exists in the new room
+        if (currentAuthUser && !userData[currentAuthUser.id]) {
+            userData[currentAuthUser.id] = {
+                name: currentAuthUser.username,
+                totalPoints: 0,
+                todayPoints: 0,
+                completedExercises: {},
+                workoutHistory: []
+            };
+            saveData();
+        }
+        
+        // Load chat for new room
+        loadChatMessages();
+        
+        // Send welcome message
+        sendSystemMessage(`Welcome to room ${roomCode}! Share this code with friends to workout together.`);
+        
+        updateRoomDisplay();
         updateDisplay();
         updateLeaderboard();
+        updateActivityFeed();
         showNotification(`Created new room: ${roomCode}`, 'success');
     }
 }
@@ -856,9 +933,20 @@ function joinWorkoutRoom() {
     if (roomCode && roomCode.length === 6) {
         if (joinRoom(roomCode.toUpperCase())) {
             loadData();
+            loadChatMessages();
+            
+            // Send join message
+            if (currentAuthUser) {
+                sendSystemMessage(`${currentAuthUser.username} joined the room! 👋`);
+            }
+            
+            updateRoomDisplay();
+            updateDisplay();
+            updateLeaderboard();
+            updateActivityFeed();
         }
     } else {
-        alert('Please enter a valid 6-character room code');
+        showNotification('Please enter a valid 6-character room code', 'error');
     }
 }
 
@@ -1052,6 +1140,19 @@ function showAuthSection() {
     document.getElementById('auth-section').style.display = 'block';
     document.getElementById('app-content').style.display = 'none';
     
+    // Hide tabs when not authenticated
+    const tabsContainer = document.querySelector('.tabs');
+    if (tabsContainer) {
+        tabsContainer.classList.remove('show');
+        tabsContainer.style.display = 'none';
+    }
+    
+    // Stop chat polling when not authenticated
+    stopChatPolling();
+    
+    // Stop leaderboard polling when not authenticated
+    stopLeaderboardPolling();
+    
     // Set up auth tab switching
     setupAuthTabs();
 }
@@ -1061,18 +1162,70 @@ function showMainApp() {
     document.getElementById('auth-section').style.display = 'none';
     document.getElementById('app-content').style.display = 'block';
     
+    // Show tabs and make them visible
+    const tabsContainer = document.querySelector('.tabs');
+    const allTabContent = document.querySelectorAll('.tab-content');
+    
+    if (tabsContainer) {
+        tabsContainer.classList.add('show');
+        tabsContainer.style.display = 'flex';
+    }
+    
+    // Make sure tab content containers are visible
+    allTabContent.forEach(content => {
+        if (content.parentElement) {
+            content.parentElement.style.display = 'block';
+        }
+    });
+    
     // Update user info display
     updateUserInfo();
     
-    // If user has a room, set as current user
-    if (currentAuthUser && currentAuthUser.roomId) {
+    // Set current user to the authenticated user's ID
+    if (currentAuthUser) {
         currentUser = currentAuthUser.id;
     }
     
+    // Initialize the default tab (main-workout should be active)
+    initializeTabs();
+    
+    // Initialize chat
+    setupChatInput();
+    loadChatMessages();
+    
+    // Start chat polling for real-time updates
+    startChatPolling();
+    
+    // Start leaderboard polling for real-time updates
+    startLeaderboardPolling();
+    
     // Update all displays
+    updateRoomDisplay();
     updateDisplay();
     updateLeaderboard();
     updateActivityFeed();
+}
+
+// Initialize tabs - make sure the default tab is shown
+function initializeTabs() {
+    // Hide all tab content
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(content => content.classList.remove('active'));
+    
+    // Remove active from all tab buttons
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(btn => btn.classList.remove('active'));
+    
+    // Show the main workout tab and activate its button
+    const mainWorkoutTab = document.getElementById('main-workout');
+    const mainWorkoutBtn = document.querySelector('[onclick*="main-workout"]');
+    
+    if (mainWorkoutTab) {
+        mainWorkoutTab.classList.add('active');
+    }
+    if (mainWorkoutBtn) {
+        mainWorkoutBtn.classList.add('active');
+    }
 }
 
 // Setup authentication tabs
@@ -1509,6 +1662,318 @@ function setupLogout() {
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', handleLogout);
+    }
+}
+
+// Workout Session Management
+let workoutInProgress = false;
+let workoutStartTime = null;
+
+function startWorkout() {
+    workoutInProgress = true;
+    workoutStartTime = new Date();
+    
+    // Update UI
+    document.getElementById('start-workout-btn').style.display = 'none';
+    document.getElementById('workout-status').classList.remove('hidden');
+    
+    // Navigate to main workout tab
+    const mainWorkoutTab = document.getElementById('main-workout');
+    const mainWorkoutBtn = document.querySelector('[onclick*="main-workout"]');
+    
+    if (mainWorkoutTab && mainWorkoutBtn) {
+        // Hide all tab content
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabContents.forEach(content => content.classList.remove('active'));
+        
+        // Remove active from all tab buttons
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        
+        // Show the main workout tab and activate its button
+        mainWorkoutTab.classList.add('active');
+        mainWorkoutBtn.classList.add('active');
+    }
+    
+    // Add to chat
+    sendSystemMessage(`${currentAuthUser.username} started working out! 💪`);
+    
+    showNotification('Workout started! Good luck! 💪', 'success');
+}
+
+function endWorkout() {
+    if (!workoutInProgress) return;
+    
+    const duration = Math.round((new Date() - workoutStartTime) / 1000 / 60); // minutes
+    workoutInProgress = false;
+    workoutStartTime = null;
+    
+    // Update UI
+    document.getElementById('start-workout-btn').style.display = 'block';
+    document.getElementById('workout-status').classList.add('hidden');
+    
+    // Add to chat
+    sendSystemMessage(`${currentAuthUser.username} finished their workout! (${duration} minutes) 🎉`);
+    
+    showNotification(`Great workout! You exercised for ${duration} minutes.`, 'success');
+}
+
+// Live Chat System
+let chatMessages = [];
+let chatCollapsed = false;
+let lastMessageCount = 0;
+let chatPollingInterval = null;
+
+// Leaderboard real-time updates
+let leaderboardPollingInterval = null;
+let lastDataHash = '';
+
+function toggleChat() {
+    const chatBox = document.getElementById('chat-box');
+    const toggleBtn = document.getElementById('chat-toggle');
+    
+    chatCollapsed = !chatCollapsed;
+    
+    if (chatCollapsed) {
+        chatBox.classList.add('collapsed');
+        toggleBtn.textContent = '▶';
+    } else {
+        chatBox.classList.remove('collapsed');
+        toggleBtn.textContent = '▼';
+    }
+}
+
+function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    
+    if (!message || !currentAuthUser) return;
+    
+    const messageData = {
+        id: Date.now(),
+        username: currentAuthUser.username,
+        userId: currentAuthUser.id,
+        message: message,
+        timestamp: new Date().toISOString(),
+        type: 'user'
+    };
+    
+    addMessageToChat(messageData);
+    saveChatMessage(messageData);
+    
+    input.value = '';
+    input.focus();
+}
+
+function sendSystemMessage(message) {
+    const messageData = {
+        id: Date.now(),
+        username: 'System',
+        userId: 'system',
+        message: message,
+        timestamp: new Date().toISOString(),
+        type: 'system'
+    };
+    
+    addMessageToChat(messageData);
+    saveChatMessage(messageData);
+}
+
+function addMessageToChat(messageData) {
+    const chatMessages = document.getElementById('chat-messages');
+    if (!chatMessages) return;
+    
+    const messageDiv = document.createElement('div');
+    
+    const isOwn = currentAuthUser && messageData.userId === currentAuthUser.id;
+    const isSystem = messageData.type === 'system';
+    
+    messageDiv.className = `chat-message ${isOwn ? 'own' : 'other'} ${isSystem ? 'system' : ''}`;
+    
+    const time = new Date(messageData.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    
+    if (isSystem) {
+        messageDiv.innerHTML = `
+            <div class="message-text" style="font-style: italic; color: #718096;">${messageData.message}</div>
+            <div class="timestamp">${time}</div>
+        `;
+    } else {
+        messageDiv.innerHTML = `
+            ${!isOwn ? `<div class="username">${messageData.username}</div>` : ''}
+            <div class="message-text">${messageData.message}</div>
+            <div class="timestamp">${time}</div>
+        `;
+    }
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function saveChatMessage(messageData) {
+    const roomCode = getCurrentRoom();
+    const chatKey = `chat-${roomCode}`;
+    
+    let roomChat = JSON.parse(localStorage.getItem(chatKey) || '[]');
+    roomChat.push(messageData);
+    
+    // Keep only last 100 messages
+    if (roomChat.length > 100) {
+        roomChat = roomChat.slice(-100);
+    }
+    
+    localStorage.setItem(chatKey, JSON.stringify(roomChat));
+    
+    // Update the last known message count
+    lastMessageCount = roomChat.length;
+}
+
+function loadChatMessages() {
+    const roomCode = getCurrentRoom();
+    const chatKey = `chat-${roomCode}`;
+    
+    const roomChat = JSON.parse(localStorage.getItem(chatKey) || '[]');
+    const chatMessagesContainer = document.getElementById('chat-messages');
+    
+    if (!chatMessagesContainer) return;
+    
+    chatMessagesContainer.innerHTML = '';
+    
+    roomChat.forEach(messageData => {
+        addMessageToChat(messageData);
+    });
+    
+    // Update the last known message count
+    lastMessageCount = roomChat.length;
+}
+
+function setupChatInput() {
+    const chatInput = document.getElementById('chat-input');
+    if (chatInput) {
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    }
+}
+
+// Add chat polling for real-time updates
+function startChatPolling() {
+    // Clear any existing polling
+    if (chatPollingInterval) {
+        clearInterval(chatPollingInterval);
+    }
+    
+    // Poll for new messages every 2 seconds
+    chatPollingInterval = setInterval(() => {
+        checkForNewChatMessages();
+    }, 2000);
+}
+
+function stopChatPolling() {
+    if (chatPollingInterval) {
+        clearInterval(chatPollingInterval);
+        chatPollingInterval = null;
+    }
+}
+
+function checkForNewChatMessages() {
+    const roomCode = getCurrentRoom();
+    const chatKey = `chat-${roomCode}`;
+    
+    const roomChat = JSON.parse(localStorage.getItem(chatKey) || '[]');
+    
+    // Only reload if there are new messages
+    if (roomChat.length !== lastMessageCount) {
+        lastMessageCount = roomChat.length;
+        loadChatMessages();
+    }
+}
+
+// Add leaderboard polling for real-time updates
+function startLeaderboardPolling() {
+    // Clear any existing polling
+    if (leaderboardPollingInterval) {
+        clearInterval(leaderboardPollingInterval);
+    }
+    
+    // Poll for leaderboard changes every 3 seconds
+    leaderboardPollingInterval = setInterval(() => {
+        checkForLeaderboardUpdates();
+    }, 3000);
+}
+
+function stopLeaderboardPolling() {
+    if (leaderboardPollingInterval) {
+        clearInterval(leaderboardPollingInterval);
+        leaderboardPollingInterval = null;
+    }
+}
+
+function checkForLeaderboardUpdates() {
+    const roomCode = getCurrentRoom();
+    const storageKey = `workout-data-${roomCode}`;
+    
+    try {
+        const savedData = localStorage.getItem(storageKey);
+        if (savedData) {
+            // Create a simple hash of the data to detect changes
+            const dataHash = btoa(savedData).substring(0, 20);
+            
+            if (dataHash !== lastDataHash && lastDataHash !== '') {
+                lastDataHash = dataHash;
+                
+                // Load the updated data
+                const data = JSON.parse(savedData);
+                if (data.users) {
+                    // Merge the data while preserving current user's session
+                    const currentUserId = currentAuthUser ? currentAuthUser.id : null;
+                    const currentUserData = currentUserId ? userData[currentUserId] : null;
+                    
+                    userData = data.users;
+                    
+                    // Restore current user data if it exists and wasn't overwritten
+                    if (currentUserData && currentUserId && !userData[currentUserId]) {
+                        userData[currentUserId] = currentUserData;
+                    }
+                    
+                    // Update displays
+                    updateLeaderboard();
+                    updateDisplay();
+                    updateActivityFeed();
+                    
+                    // Show a subtle notification about leaderboard update
+                    showNotification('Leaderboard updated! 📊', 'info');
+                }
+            } else if (lastDataHash === '') {
+                // First time setting the hash
+                lastDataHash = dataHash;
+            }
+        }
+    } catch (error) {
+        console.error('Error checking for leaderboard updates:', error);
+    }
+}
+
+// Enhanced save function to trigger leaderboard updates
+function triggerLeaderboardUpdate() {
+    // Update the data hash to force other clients to refresh
+    const roomCode = getCurrentRoom();
+    const storageKey = `workout-data-${roomCode}`;
+    
+    const dataToSave = {
+        users: userData,
+        achievements: achievements,
+        lastUpdate: new Date().toISOString(),
+        room: roomCode,
+        updateTrigger: Math.random() // Force change detection
+    };
+    
+    try {
+        localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+        localStorage.setItem('workout-tracker-backup', JSON.stringify(dataToSave));
+    } catch (error) {
+        console.error('localStorage save failed:', error);
     }
 }
 
