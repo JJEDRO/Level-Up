@@ -3265,6 +3265,7 @@ function initializeWorkoutSelection() {
         checkbox.addEventListener('change', function() {
             updateWorkoutSelection();
             updateWorkoutPreview();
+            updateStartWorkoutSummary();
         });
     });
     
@@ -3428,6 +3429,79 @@ function updateWorkoutSelection() {
             checkbox.parentElement.style.opacity = '1';
         }
     });
+}
+
+function updateStartWorkoutSummary() {
+    const summaryContainer = document.getElementById('start-workout-summary');
+    const summaryMessage = document.querySelector('.summary-message');
+    
+    if (!summaryContainer || !summaryMessage) return;
+    
+    // Clear existing summary
+    summaryContainer.innerHTML = '';
+    
+    if (selectedWorkouts.size === 0) {
+        // Show default message
+        summaryContainer.innerHTML = `
+            <div class="summary-message">
+                <h5>📝 Workout Summary</h5>
+                <p>Select workouts from the "Select Workouts" tab to see your summary here.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Create summary content
+    const summaryContent = document.createElement('div');
+    summaryContent.className = 'selected-workouts-summary';
+    
+    let totalPoints = 0;
+    
+    // Add header
+    const summaryHeader = document.createElement('div');
+    summaryHeader.className = 'summary-message';
+    summaryHeader.innerHTML = `
+        <h5>📝 Your Selected Workouts (${selectedWorkouts.size}/${MAX_WORKOUT_SELECTION})</h5>
+        <p>Ready to crush these workouts? Let's get started!</p>
+    `;
+    summaryContent.appendChild(summaryHeader);
+    
+    // Get workout data
+    const workoutData = {
+        'select-main-workout': { name: '💪 Main Workout', points: 1720 },
+        'select-second-workout': { name: '🔥 2nd Workout', points: 2990 },
+        'select-mobility-workout': { name: '🧘 Mobility & Stretching', points: 440 },
+        'select-basic-exercises': { name: '🏃 Basic Exercises', points: 530 },
+        'select-elite-challenges': { name: '⚡ Elite Challenges', points: 20800 },
+        'select-workout-quests': { name: '🎯 Workout Quests', points: 1675 }
+    };
+    
+    // Add selected workouts
+    selectedWorkouts.forEach(workoutId => {
+        const workout = workoutData[workoutId];
+        if (workout) {
+            totalPoints += workout.points;
+            
+            const workoutItem = document.createElement('div');
+            workoutItem.className = 'summary-workout-item';
+            workoutItem.innerHTML = `
+                <h6>${workout.name}</h6>
+                <span class="points">${workout.points.toLocaleString()} pts</span>
+            `;
+            summaryContent.appendChild(workoutItem);
+        }
+    });
+    
+    // Add total points summary
+    const totalSummary = document.createElement('div');
+    totalSummary.className = 'total-points-summary';
+    totalSummary.innerHTML = `
+        <h6>Total Potential Points</h6>
+        <div class="total-points">${totalPoints.toLocaleString()} points</div>
+    `;
+    summaryContent.appendChild(totalSummary);
+    
+    summaryContainer.appendChild(summaryContent);
 }
 
 function startSelectedWorkouts() {

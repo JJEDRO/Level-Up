@@ -26,6 +26,7 @@
                 <div class="workout-selection-tabs">
                     <button class="workout-tab-btn active" data-tab="selection">📋 Select Workouts</button>
                     <button class="workout-tab-btn" data-tab="preview">👀 Preview Workouts</button>
+                    <button class="workout-tab-btn" data-tab="start">🚀 Start Workout</button>
                 </div>
                 
                 <!-- Selection Tab -->
@@ -91,25 +92,6 @@
                             </label>
                         </div>
                     </div>
-                    
-                    <div class="selected-count">
-                        <span id="selected-count">0</span> / 5 workouts selected
-                    </div>
-                    
-                    <button id="start-selected-workouts" class="start-workouts-btn" disabled>
-                        🚀 Start Selected Workouts
-                    </button>
-                    
-                    <!-- Workout Controls - Available after selection -->
-                    <div id="workout-controls-selection" class="workout-controls-selection" style="display: none; margin-top: 2rem;">
-                        <button id="start-workout-btn" onclick="startWorkout()" class="start-workout-btn">
-                            🏋️ Start Working Out!
-                        </button>
-                        <div id="workout-status" class="workout-status hidden">
-                            <span class="status-text">💪 Workout in progress...</span>
-                            <button onclick="endWorkout()" class="end-workout-btn">Finish Workout</button>
-                        </div>
-                    </div>
                 </div>
                 
                 <!-- Preview Tab -->
@@ -120,6 +102,44 @@
                             <p>Select workouts from the "Select Workouts" tab to see their details here.</p>
                         </div>
                         <div id="selected-workouts-preview"></div>
+                    </div>
+                </div>
+                
+                <!-- Start Workout Tab -->
+                <div id="start-tab" class="workout-tab-content">
+                    <div class="start-workout-container">
+                        <div class="start-workout-header">
+                            <h4>🚀 Ready to Start Your Workout?</h4>
+                            <p>Review your selections and begin your fitness journey!</p>
+                        </div>
+                        
+                        <div class="selected-count">
+                            <span id="selected-count">0</span> / 5 workouts selected
+                        </div>
+                        
+                        <div class="start-workout-summary" id="start-workout-summary">
+                            <div class="summary-message">
+                                <h5>📝 Workout Summary</h5>
+                                <p>Select workouts from the "Select Workouts" tab to see your summary here.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="start-workout-actions">
+                            <button id="start-selected-workouts" class="start-workouts-btn" disabled>
+                                🚀 Start Selected Workouts
+                            </button>
+                            
+                            <!-- Workout Controls - Available after selection -->
+                            <div id="workout-controls-selection" class="workout-controls-selection" style="display: none; margin-top: 2rem;">
+                                <button id="start-workout-btn" onclick="startWorkout()" class="start-workout-btn">
+                                    🏋️ Start Working Out!
+                                </button>
+                                <div id="workout-status" class="workout-status hidden">
+                                    <span class="status-text">💪 Workout in progress...</span>
+                                    <button onclick="endWorkout()" class="end-workout-btn">Finish Workout</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

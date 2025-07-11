@@ -296,10 +296,11 @@ header {
 }
 
 .start-workouts-btn:disabled {
-    background: #a0aec0;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
+    background: #a0aec0 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+    pointer-events: auto !important;
 }
 
 /* Workout Selection Tabs */
@@ -310,6 +311,7 @@ header {
     background: rgba(102, 126, 234, 0.1);
     padding: 6px;
     gap: 4px;
+    flex-wrap: wrap;
 }
 
 .workout-tab-btn {
@@ -431,6 +433,118 @@ header {
     position: absolute;
     left: 0;
     font-weight: bold;
+}
+
+/* Start Workout Tab Styles */
+.start-workout-container {
+    text-align: center;
+    padding: 2rem;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.start-workout-header h4 {
+    color: #1a202c;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.start-workout-header p {
+    color: #4a5568;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.start-workout-summary {
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 2px solid rgba(102, 126, 234, 0.15);
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.summary-message {
+    text-align: center;
+}
+
+.summary-message h5 {
+    color: #667eea;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.summary-message p {
+    color: #4a5568;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.selected-workouts-summary {
+    display: grid;
+    gap: 1rem;
+    text-align: left;
+    width: 100%;
+}
+
+.summary-workout-item {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.summary-workout-item h6 {
+    color: #1a202c;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.summary-workout-item .points {
+    color: #667eea;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.start-workout-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+}
+
+.total-points-summary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.total-points-summary h6 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.total-points-summary .total-points {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0;
 }
 
 /* Workout Controls in Selection */
@@ -2661,6 +2775,18 @@ header h1 {
         -webkit-overflow-scrolling: touch;
     }
     
+    .workout-selection-tabs {
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px;
+    }
+    
+    .workout-tab-btn {
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 0.95rem;
+    }
+    
     .workout-selection h3 {
         font-size: 1.5rem;
     }
@@ -2668,6 +2794,9 @@ header h1 {
     .workout-options {
         grid-template-columns: 1fr;
         gap: 1rem;
+        margin-bottom: 2rem;
+        /* Add extra bottom margin for mobile button spacing */
+        padding-bottom: 120px;
     }
     
     .workout-label {
@@ -2968,33 +3097,8 @@ header h1 {
     .workout-tab-content {
         max-height: none;
         min-height: auto;
-        padding-bottom: 150px; /* Extra space for buttons */
-    }
-    
-    .start-workouts-btn {
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-        right: 20px;
-        width: auto;
-        margin: 0;
-        z-index: 1000;
-        padding: 16px 32px;
-        font-size: 1.1rem;
-        border-radius: 16px;
-        box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
-    }
-    
-    .selected-count {
-        position: fixed;
-        bottom: 80px;
-        left: 20px;
-        right: 20px;
-        margin: 0;
-        z-index: 999;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(102, 126, 234, 0.2);
+        padding-bottom: 20px;
+        position: relative;
     }
 }
 
@@ -3005,6 +3109,7 @@ header h1 {
         margin: 5px 0;
         border-radius: 16px;
         max-height: calc(100vh - 20px);
+        padding-bottom: 120px; /* Extra space for fixed buttons */
     }
     
     .workout-selection h3 {
@@ -3035,23 +3140,75 @@ header h1 {
         font-size: 0.85rem;
     }
     
-    .start-workouts-btn {
-        bottom: 10px;
-        left: 10px;
-        right: 10px;
-        padding: 14px 24px;
-        font-size: 1rem;
+    .workout-selection .start-workouts-btn {
+        bottom: 10px !important;
+        left: 10px !important;
+        right: 10px !important;
+        padding: 14px 24px !important;
+        font-size: 1rem !important;
+        min-height: 48px !important; /* Ensure proper touch target */
     }
     
-    .selected-count {
-        bottom: 65px;
-        left: 10px;
-        right: 10px;
-        font-size: 1rem;
-        padding: 0.8rem;
+    .workout-selection .selected-count {
+        bottom: 65px !important;
+        left: 10px !important;
+        right: 10px !important;
+        font-size: 1rem !important;
+        padding: 0.8rem !important;
     }
     
     .workout-tab-content {
-        padding-bottom: 120px;
+        padding-bottom: 120px; /* Extra space for fixed buttons */
+    }
+}
+
+/* Mobile-specific button fixes - highest specificity */
+@media (max-width: 768px) {
+    body .workout-selection #start-selected-workouts.start-workouts-btn {
+        position: fixed !important;
+        bottom: 20px !important;
+        left: 20px !important;
+        right: 20px !important;
+        width: calc(100% - 40px) !important;
+        max-width: none !important;
+        margin: 0 !important;
+        z-index: 1001 !important;
+        padding: 16px 32px !important;
+        font-size: 1.1rem !important;
+        border-radius: 16px !important;
+        box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4) !important;
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%) !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
+        touch-action: manipulation !important;
+        min-height: 48px !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    body .workout-selection #start-selected-workouts.start-workouts-btn:disabled {
+        background: #a0aec0 !important;
+        cursor: not-allowed !important;
+        opacity: 0.6 !important;
+    }
+    
+    body .workout-selection .selected-count {
+        position: fixed !important;
+        bottom: 80px !important;
+        left: 20px !important;
+        right: 20px !important;
+        width: calc(100% - 40px) !important;
+        margin: 0 !important;
+        z-index: 1000 !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(15px) !important;
+        border: 1px solid rgba(102, 126, 234, 0.2) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+        pointer-events: none !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
 }
