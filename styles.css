@@ -8,6 +8,16 @@
 /* Smooth scrolling for the whole page */
 html {
     scroll-behavior: smooth;
+    /* Prevent horizontal scrolling on mobile */
+    overflow-x: hidden;
+}
+
+/* Ensure proper scrolling on mobile devices */
+body {
+    /* Prevent horizontal scrolling */
+    overflow-x: hidden;
+    /* Enable momentum scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Add subtle animations to all interactive elements */
@@ -164,8 +174,8 @@ header {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.3);
     min-height: 60vh;
-    max-height: 80vh;
-    overflow: hidden;
+    max-height: 85vh;
+    overflow-y: auto;
 }
 
 .hidden {
@@ -194,6 +204,8 @@ header {
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: 1rem;
     margin-bottom: 2rem;
+    /* Ensure smooth scrolling on mobile */
+    -webkit-overflow-scrolling: touch;
 }
 
 .workout-option {
@@ -326,9 +338,10 @@ header {
 
 .workout-tab-content {
     display: none;
-    min-height: 50vh;
-    max-height: 50vh;
+    min-height: 40vh;
+    max-height: 60vh;
     overflow-y: auto;
+    padding-bottom: 2rem;
 }
 
 .workout-tab-content.active {
@@ -2642,6 +2655,10 @@ header h1 {
     
     .workout-selection {
         padding: 2rem 1rem;
+        max-height: 90vh;
+        overflow-y: auto;
+        /* Ensure proper scrolling on mobile */
+        -webkit-overflow-scrolling: touch;
     }
     
     .workout-selection h3 {
@@ -2655,6 +2672,34 @@ header h1 {
     
     .workout-label {
         padding: 1rem;
+    }
+    
+    .workout-tab-content {
+        max-height: 65vh;
+        overflow-y: auto;
+        padding-bottom: 3rem;
+        /* Ensure proper scrolling on mobile */
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .start-workouts-btn {
+        position: sticky;
+        bottom: 0;
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        box-shadow: 0 -4px 15px rgba(72, 187, 120, 0.3), 0 4px 15px rgba(72, 187, 120, 0.3);
+        z-index: 10;
+        margin-top: 2rem;
+    }
+    
+    .selected-count {
+        position: sticky;
+        bottom: 80px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        z-index: 9;
+        margin-bottom: 1rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
     
     .tabs {
@@ -2910,5 +2955,103 @@ header h1 {
     
     .notification.show {
         transform: translateY(0);
+    }
+    
+    /* Additional mobile scrolling fixes */
+    .workout-selection {
+        min-height: auto;
+        max-height: calc(100vh - 40px);
+        margin: 10px 0;
+        padding: 1.5rem 1rem;
+    }
+    
+    .workout-tab-content {
+        max-height: none;
+        min-height: auto;
+        padding-bottom: 150px; /* Extra space for buttons */
+    }
+    
+    .start-workouts-btn {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        width: auto;
+        margin: 0;
+        z-index: 1000;
+        padding: 16px 32px;
+        font-size: 1.1rem;
+        border-radius: 16px;
+        box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
+    }
+    
+    .selected-count {
+        position: fixed;
+        bottom: 80px;
+        left: 20px;
+        right: 20px;
+        margin: 0;
+        z-index: 999;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(102, 126, 234, 0.2);
+    }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+    .workout-selection {
+        padding: 1rem 0.5rem;
+        margin: 5px 0;
+        border-radius: 16px;
+        max-height: calc(100vh - 20px);
+    }
+    
+    .workout-selection h3 {
+        font-size: 1.3rem;
+        margin-bottom: 0.8rem;
+    }
+    
+    .workout-selection p {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .workout-options {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .workout-label {
+        padding: 0.8rem;
+    }
+    
+    .workout-info h4 {
+        font-size: 1.1rem;
+    }
+    
+    .workout-info p {
+        font-size: 0.85rem;
+    }
+    
+    .start-workouts-btn {
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        padding: 14px 24px;
+        font-size: 1rem;
+    }
+    
+    .selected-count {
+        bottom: 65px;
+        left: 10px;
+        right: 10px;
+        font-size: 1rem;
+        padding: 0.8rem;
+    }
+    
+    .workout-tab-content {
+        padding-bottom: 120px;
     }
 }
