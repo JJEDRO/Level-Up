@@ -17,47 +17,157 @@
         <header>
             <h1>🏋️ Level-Up Workout Tracker</h1>
             
-            <!-- User Authentication Section -->
-            <div id="auth-section" class="auth-section">
-            <div class="auth-tabs">
-                <button class="auth-tab-btn active" data-tab="login">Login</button>
-                <button class="auth-tab-btn" data-tab="signup">Sign Up</button>
-            </div>
-            
-            <form id="login-form" class="auth-form active">
-                <h3>Welcome Back!</h3>
-                <input type="text" id="login-username" placeholder="Username" required>
-                <input type="password" id="login-password" placeholder="Password" required>
-                <button type="submit" class="auth-btn">Login</button>
-            </form>
-            
-            <form id="signup-form" class="auth-form">
-                <h3>Create Account</h3>
-                <input type="text" id="signup-username" placeholder="Choose Username" required>
-                <input type="email" id="signup-email" placeholder="Email Address" required>
-                <input type="password" id="signup-password" placeholder="Choose Password" required>
-                <button type="submit" class="auth-btn">Sign Up</button>
-            </form>
-            
-            <div class="guest-option">
-                <button id="guest-btn" class="guest-btn">Continue as Guest</button>
-            </div>
+            <!-- Workout Selection Section -->
+            <div id="workout-selection" class="workout-selection">
+                <h3>🏋️ Select Your Workouts for Today</h3>
+                <p>Choose up to 5 different workouts to complete today:</p>
+                
+                <!-- Workout Selection Tabs -->
+                <div class="workout-selection-tabs">
+                    <button class="workout-tab-btn active" data-tab="selection">📋 Select Workouts</button>
+                    <button class="workout-tab-btn" data-tab="preview">👀 Preview Workouts</button>
+                </div>
+                
+                <!-- Selection Tab -->
+                <div id="selection-tab" class="workout-tab-content active">
+                    <div class="workout-options">
+                        <div class="workout-option">
+                            <input type="checkbox" id="select-main-workout" class="workout-checkbox">
+                            <label for="select-main-workout" class="workout-label">
+                                <div class="workout-info">
+                                    <h4>💪 Main Workout</h4>
+                                    <p>1,720 points - Pushups, Jump Squats, Plank, Knee Pushups, Situps, Jumping Jacks</p>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="workout-option">
+                            <input type="checkbox" id="select-second-workout" class="workout-checkbox">
+                            <label for="select-second-workout" class="workout-label">
+                                <div class="workout-info">
+                                    <h4>🔥 2nd Workout</h4>
+                                    <p>2,990 points - Pushups, Plank, Burpees, Normal Squats</p>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="workout-option">
+                            <input type="checkbox" id="select-mobility-workout" class="workout-checkbox">
+                            <label for="select-mobility-workout" class="workout-label">
+                                <div class="workout-info">
+                                    <h4>🧘 Mobility & Stretching</h4>
+                                    <p>440 points - Warm-up, Mobility Work, Activation, Cool-down</p>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="workout-option">
+                            <input type="checkbox" id="select-basic-exercises" class="workout-checkbox">
+                            <label for="select-basic-exercises" class="workout-label">
+                                <div class="workout-info">
+                                    <h4>🏃 Basic Exercises</h4>
+                                    <p>530 points - Squats, Jumping Jacks, Calf Raises, Glute Bridges</p>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="workout-option">
+                            <input type="checkbox" id="select-elite-challenges" class="workout-checkbox">
+                            <label for="select-elite-challenges" class="workout-label">
+                                <div class="workout-info">
+                                    <h4>⚡ Elite Challenges</h4>
+                                    <p>20,800 points - Burpees, 5k Run, 100 Push-ups, Murph Prep</p>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="workout-option">
+                            <input type="checkbox" id="select-workout-quests" class="workout-checkbox">
+                            <label for="select-workout-quests" class="workout-label">
+                                <div class="workout-info">
+                                    <h4>🎯 Workout Quests</h4>
+                                    <p>1,675 points - Push-ups, Lunges, Crunches, Leg Raises</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="selected-count">
+                        <span id="selected-count">0</span> / 5 workouts selected
+                    </div>
+                    
+                    <button id="start-selected-workouts" class="start-workouts-btn" disabled>
+                        🚀 Start Selected Workouts
+                    </button>
+                    
+                    <!-- Workout Controls - Available after selection -->
+                    <div id="workout-controls-selection" class="workout-controls-selection" style="display: none; margin-top: 2rem;">
+                        <button id="start-workout-btn" onclick="startWorkout()" class="start-workout-btn">
+                            🏋️ Start Working Out!
+                        </button>
+                        <div id="workout-status" class="workout-status hidden">
+                            <span class="status-text">💪 Workout in progress...</span>
+                            <button onclick="endWorkout()" class="end-workout-btn">Finish Workout</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Preview Tab -->
+                <div id="preview-tab" class="workout-tab-content">
+                    <div class="workout-preview-container">
+                        <div class="preview-message">
+                            <h4>📋 Selected Workouts Preview</h4>
+                            <p>Select workouts from the "Select Workouts" tab to see their details here.</p>
+                        </div>
+                        <div id="selected-workouts-preview"></div>
+                    </div>
+                </div>
             </div>
 
-        <!-- Main App Section (hidden until authenticated) -->
-        <div id="app-content" class="app-content hidden">
-            <div id="user-info" class="user-info" style="display: none;">
-                <span>Welcome, <strong id="user-display-name">User</strong>!</span>
-                <button id="logout-btn" class="logout-btn">Logout</button>
-            </div>
-            
-            <div class="room-controls">
-                <div class="current-room">
-                    <span>Room: <strong id="room-code">DEFAULT</strong></span>
+            <!-- Profile Section - Always visible -->
+            <div class="profile-section">
+                <div class="profile-header">
+                    <h3>👤 Your Profile</h3>
+                    <button onclick="openProfileModal()" class="edit-profile-btn">✏️ Edit Profile</button>
                 </div>
-                <button onclick="createWorkoutRoom()" class="room-btn">🏠 New Room</button>
-                <button onclick="joinWorkoutRoom()" class="room-btn">🚪 Join Room</button>
-                <button onclick="setupGitHubSharing()" class="github-btn">🌐 GitHub Sync</button>
+                <div class="profile-content">
+                    <div class="profile-avatar">
+                        <div class="avatar-display" id="profile-avatar" onclick="openProfileModal()">
+                            👤
+                        </div>
+                        <div>
+                            <strong id="profile-name">Workout User</strong>
+                        </div>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <div class="profile-stat-value" id="profile-total-points">0</div>
+                            <div class="profile-stat-label">Total Points</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-value" id="profile-workouts-completed">0</div>
+                            <div class="profile-stat-label">Workouts</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-value" id="profile-current-streak">0</div>
+                            <div class="profile-stat-label">Day Streak</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        <!-- Main App Section (hidden until workouts selected) -->
+        <div id="app-content" class="app-content hidden">
+            <!-- Day Tracker Section -->
+            <div class="day-tracker">
+                <div class="day-info">
+                    <span>📅 Day <strong id="current-day">1</strong> of your workout journey</span>
+                    <span class="streak-info">🔥 <strong id="workout-streak">0</strong> day streak</span>
+                </div>
+                <div class="day-controls">
+                    <button onclick="goToNewDay()" class="new-day-btn">� Start New Day</button>
+                    <button onclick="saveProgress()" class="save-btn">💾 Save Progress</button>
+                </div>
             </div>
             
             <!-- Workout Controls -->
@@ -71,35 +181,52 @@
                 </div>
             </div>
             
-            <!-- Live Chat -->
-            <div class="chat-container">
-                <div class="chat-header">
-                    <h4>💬 Live Chat</h4>
-                    <span id="chat-status" class="chat-status">📱 Local</span>
-                    <button onclick="toggleChat()" id="chat-toggle" class="chat-toggle">▼</button>
-                </div>
-                <div id="chat-box" class="chat-box">
-                    <div id="chat-messages" class="chat-messages"></div>
-                    <div class="chat-input-container">
-                        <input type="text" id="chat-input" placeholder="Type a message..." maxlength="200">
-                        <button onclick="sendMessage()" class="send-btn">Send</button>
-                    </div>
+            <!-- Workout Timer -->
+            <div id="workout-timer" class="workout-timer hidden">
+                <div class="timer-display" id="timer-display">00:00:00</div>
+                <div class="timer-info" id="timer-info">Ready to start your workout!</div>
+                <div class="timer-controls">
+                    <button id="timer-start-btn" onclick="startTimer()" class="timer-btn start">▶️ Start</button>
+                    <button id="timer-pause-btn" onclick="pauseTimer()" class="timer-btn pause hidden">⏸️ Pause</button>
+                    <button id="timer-stop-btn" onclick="stopTimer()" class="timer-btn stop hidden">⏹️ Stop</button>
                 </div>
             </div>
             
-            <div class="score-display">
-                <h2>Total Points: <span id="total-points">0</span></h2>
-                <h3>Today's Points: <span id="today-points">0</span></h3>
-                <div class="real-time-updates">
-                    <h4>Recent Activity</h4>
-                    <div id="activity-feed"></div>
+            <!-- Enhanced Score Display -->
+            <div class="enhanced-score-display">
+                <div class="main-scores">
+                    <div class="score-card total-points-card">
+                        <div class="score-icon">🏆</div>
+                        <div class="score-info">
+                            <div class="score-label">Total Points</div>
+                            <div class="score-value" id="total-points">0</div>
+                        </div>
+                    </div>
+                    <div class="score-card today-points-card">
+                        <div class="score-icon">⚡</div>
+                        <div class="score-info">
+                            <div class="score-label">Today's Points</div>
+                            <div class="score-value" id="today-points">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Enhanced Activity Feed -->
+                <div class="enhanced-activity-section">
+                    <div class="activity-header">
+                        <h3>📈 Recent Activity</h3>
+                        <button onclick="resetAllProgress()" class="reset-all-btn">🔄 Reset Everything</button>
+                    </div>
+                    <div class="activity-feed-container">
+                        <div id="activity-feed" class="activity-feed-enhanced"></div>
+                    </div>
                 </div>
             </div>
         </div>
         </header>
 
-        <!-- Tabs and content only show when authenticated -->
-        <div class="tabs">
+        <!-- Tabs and content only show when workouts selected -->
+        <div class="tabs hidden" id="workout-tabs" style="display: none;">
             <button class="tab-btn active" onclick="openTab(event, 'main-workout')">Main Workout</button>
             <button class="tab-btn" onclick="openTab(event, 'second-workout')">2nd Workout</button>
             <button class="tab-btn" onclick="openTab(event, 'mobility-workout')">Mobility & Stretching</button>
@@ -107,11 +234,10 @@
             <button class="tab-btn" onclick="openTab(event, 'elite-challenges')">Elite Challenges</button>
             <button class="tab-btn" onclick="openTab(event, 'workout-quests')">Workout Quests</button>
             <button class="tab-btn" onclick="openTab(event, 'side-quests')">Side Quests</button>
-            <button class="tab-btn" onclick="openTab(event, 'leaderboard')">Leaderboard</button>
         </div>
 
         <!-- Main Workout Tab -->
-        <div id="main-workout" class="tab-content active">
+        <div id="main-workout" class="tab-content active" style="display: none;">
             <h2>1st Workout 👍 (Total: 1,720 points)</h2>
             <div class="workout-grid">
                 <div class="exercise-card">
@@ -161,7 +287,7 @@
         </div>
 
         <!-- Second Workout Tab -->
-        <div id="second-workout" class="tab-content">
+        <div id="second-workout" class="tab-content" style="display: none;">
             <h2>2nd Workout for more points! (Total: 2,990 points)</h2>
             <div class="workout-grid">
                 <div class="exercise-card">
@@ -197,7 +323,7 @@
         </div>
 
         <!-- Mobility & Stretching Tab -->
-        <div id="mobility-workout" class="tab-content">
+        <div id="mobility-workout" class="tab-content" style="display: none;">
             <h2>3rd Workout - Mobility & Stretching (Total: 440 points)</h2>
             
             <h3>Warm-up</h3>
@@ -302,7 +428,7 @@
         </div>
 
         <!-- Basic Exercises Tab -->
-        <div id="basic-exercises" class="tab-content">
+        <div id="basic-exercises" class="tab-content" style="display: none;">
             <h2>Basic Exercises (Total: 530 points)</h2>
             <div class="workout-grid">
                 <div class="exercise-card">
@@ -358,7 +484,7 @@
         </div>
 
         <!-- Elite Challenges Tab -->
-        <div id="elite-challenges" class="tab-content">
+        <div id="elite-challenges" class="tab-content" style="display: none;">
             <h2>Elite Fitness Challenges (Total: 20,800 points)</h2>
             <div class="workout-grid">
                 <div class="exercise-card elite">
@@ -405,7 +531,7 @@
         </div>
 
         <!-- Workout Quests Tab -->
-        <div id="workout-quests" class="tab-content">
+        <div id="workout-quests" class="tab-content" style="display: none;">
             <h2>Workout Quests (Total: 1,675 points)</h2>
             <div class="workout-grid">
                 <div class="exercise-card">
@@ -468,7 +594,7 @@
         </div>
 
         <!-- Side Quests Tab -->
-        <div id="side-quests" class="tab-content">
+        <div id="side-quests" class="tab-content" style="display: none;">
             <h2>Side Quests 😃 (Total: 1,800 points)</h2>
             <div class="workout-grid">
                 <div class="exercise-card side-quest">
@@ -509,29 +635,156 @@
                 <button class="negative-btn" onclick="applyNegativePoints('no-video', 3000)">Not editing video (-3000 pts)</button>
                 <button class="negative-btn" onclick="applyNegativePoints('no-stretch', 50)">Not stretching (-50 pts)</button>
                 <button class="negative-btn" onclick="applyNegativePoints('skip-main', 150)">Not doing full main workout (-150 pts)</button>
+                
+                <!-- Custom point deduction section -->
+                <div class="custom-deduction">
+                    <h4>Custom Point Deduction</h4>
+                    <input type="number" id="custom-deduction-amount" placeholder="Enter points to deduct" min="1" max="10000">
+                    <input type="text" id="custom-deduction-reason" placeholder="Reason for deduction">
+                    <button class="negative-btn" onclick="applyCustomNegativePoints()">Apply Custom Deduction</button>
+                </div>
             </div>
         </div>
 
-        <!-- Leaderboard Tab -->
-        <div id="leaderboard" class="tab-content">
-            <h2>🏆 Leaderboard</h2>
-            <div class="leaderboard-container">
-                <div class="leaderboard-header">
-                    <button onclick="syncData()" class="sync-btn">🔄 Sync Data</button>
-                    <button onclick="createBackup()" class="backup-btn">💾 Backup</button>
-                    <button onclick="resetAllData()" class="reset-btn">Reset All Data</button>
-                    <button onclick="exportData()" class="export-btn">Export Data</button>
-                </div>
-                <div id="leaderboard-list"></div>
-            </div>
-            
-            <h3>Daily Progress</h3>
-            <div id="daily-progress"></div>
-            
-            <h3>Achievement Badges</h3>
-            <div id="achievements"></div>
-        </div>
+        <!-- Leaderboard Tab - REMOVED -->
         </div> <!-- End app-content -->
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="profile-modal">
+        <div class="profile-modal-content">
+            <div class="profile-modal-header">
+                <h3>Edit Profile</h3>
+                <button onclick="closeProfileModal()" class="close-modal-btn">&times;</button>
+            </div>
+            <div class="profile-form">
+                <div class="form-group">
+                    <label for="profile-name-input">Display Name</label>
+                    <input type="text" id="profile-name-input" placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label>Choose Avatar</label>
+                    <div class="avatar-selector" id="avatar-selector">
+                        <div class="avatar-option" data-avatar="👤" onclick="selectAvatar('👤')">👤</div>
+                        <div class="avatar-option" data-avatar="😊" onclick="selectAvatar('😊')">😊</div>
+                        <div class="avatar-option" data-avatar="💪" onclick="selectAvatar('💪')">💪</div>
+                        <div class="avatar-option" data-avatar="🏋️" onclick="selectAvatar('🏋️')">🏋️</div>
+                        <div class="avatar-option" data-avatar="🔥" onclick="selectAvatar('🔥')">🔥</div>
+                        <div class="avatar-option" data-avatar="⚡" onclick="selectAvatar('⚡')">⚡</div>
+                        <div class="avatar-option" data-avatar="🚀" onclick="selectAvatar('🚀')">🚀</div>
+                        <div class="avatar-option" data-avatar="🎯" onclick="selectAvatar('🎯')">🎯</div>
+                        <div class="avatar-option" data-avatar="🏆" onclick="selectAvatar('🏆')">🏆</div>
+                        <div class="avatar-option" data-avatar="👑" onclick="selectAvatar('👑')">👑</div>
+                        <div class="avatar-option" data-avatar="🦾" onclick="selectAvatar('🦾')">🦾</div>
+                        <div class="avatar-option" data-avatar="🌟" onclick="selectAvatar('🌟')">🌟</div>
+                        <div class="avatar-option" data-avatar="🎪" onclick="selectAvatar('🎪')">🎪</div>
+                        <div class="avatar-option" data-avatar="🦄" onclick="selectAvatar('🦄')">🦄</div>
+                        <div class="avatar-option" data-avatar="🐉" onclick="selectAvatar('🐉')">🐉</div>
+                        <div class="avatar-option" data-avatar="🦅" onclick="selectAvatar('🦅')">🦅</div>
+                        <div class="avatar-option" data-avatar="🦁" onclick="selectAvatar('🦁')">🦁</div>
+                        <div class="avatar-option" data-avatar="🐺" onclick="selectAvatar('🐺')">🐺</div>
+                        <div class="avatar-option custom-image-option" onclick="selectCustomImage()">📷</div>
+                    </div>
+                    <div class="custom-image-upload">
+                        <input type="file" id="custom-avatar-input" accept="image/*" style="display: none;" onchange="handleCustomImageUpload(event)">
+                        <button type="button" onclick="document.getElementById('custom-avatar-input').click()" class="upload-btn">📷 Upload Custom Image</button>
+                    </div>
+                </div>
+                
+                <!-- Image Editor Section -->
+                <div id="image-editor-section" class="image-editor-section" style="display: none;">
+                    <h4>✨ Edit Your Profile Picture</h4>
+                    
+                    <!-- Image Preview and Canvas -->
+                    <div class="image-editor-container">
+                        <div class="editor-preview">
+                            <img id="editor-preview-image" src="" alt="Preview" style="display: none;">
+                            <canvas id="editor-canvas" width="300" height="300"></canvas>
+                            <div class="crop-overlay" id="crop-overlay">
+                                <div class="crop-handles">
+                                    <div class="crop-handle top-left"></div>
+                                    <div class="crop-handle top-right"></div>
+                                    <div class="crop-handle bottom-left"></div>
+                                    <div class="crop-handle bottom-right"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Editor Controls -->
+                        <div class="editor-controls">
+                            <!-- Crop Controls -->
+                            <div class="control-group">
+                                <h5>🖼️ Crop & Resize</h5>
+                                <div class="control-buttons">
+                                    <button type="button" onclick="enableCropMode()" class="control-btn crop-btn">✂️ Crop</button>
+                                    <button type="button" onclick="resetImage()" class="control-btn reset-btn">🔄 Reset</button>
+                                </div>
+                                <div class="size-presets">
+                                    <button type="button" onclick="resizeImage(150, 150)" class="size-btn">150x150</button>
+                                    <button type="button" onclick="resizeImage(200, 200)" class="size-btn">200x200</button>
+                                    <button type="button" onclick="resizeImage(300, 300)" class="size-btn">300x300</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Filter Controls -->
+                            <div class="control-group">
+                                <h5>🎨 Filters & Effects</h5>
+                                <div class="filter-controls">
+                                    <div class="slider-control">
+                                        <label for="brightness-slider">☀️ Brightness</label>
+                                        <input type="range" id="brightness-slider" min="0" max="200" value="100" oninput="applyFilters()">
+                                        <span id="brightness-value">100%</span>
+                                    </div>
+                                    
+                                    <div class="slider-control">
+                                        <label for="contrast-slider">🌗 Contrast</label>
+                                        <input type="range" id="contrast-slider" min="0" max="200" value="100" oninput="applyFilters()">
+                                        <span id="contrast-value">100%</span>
+                                    </div>
+                                    
+                                    <div class="slider-control">
+                                        <label for="saturation-slider">🎭 Saturation</label>
+                                        <input type="range" id="saturation-slider" min="0" max="200" value="100" oninput="applyFilters()">
+                                        <span id="saturation-value">100%</span>
+                                    </div>
+                                    
+                                    <div class="slider-control">
+                                        <label for="blur-slider">🌫️ Blur</label>
+                                        <input type="range" id="blur-slider" min="0" max="10" value="0" oninput="applyFilters()">
+                                        <span id="blur-value">0px</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="filter-presets">
+                                    <button type="button" onclick="applyPresetFilter('grayscale')" class="filter-btn">🖤 Grayscale</button>
+                                    <button type="button" onclick="applyPresetFilter('sepia')" class="filter-btn">🟤 Sepia</button>
+                                    <button type="button" onclick="applyPresetFilter('invert')" class="filter-btn">🔄 Invert</button>
+                                    <button type="button" onclick="applyPresetFilter('none')" class="filter-btn">✨ Clear</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Rotation Controls -->
+                            <div class="control-group">
+                                <h5>🔄 Rotation</h5>
+                                <div class="rotation-controls">
+                                    <button type="button" onclick="rotateImage(-90)" class="control-btn">↺ Left</button>
+                                    <button type="button" onclick="rotateImage(90)" class="control-btn">↻ Right</button>
+                                    <button type="button" onclick="flipImage('horizontal')" class="control-btn">↔️ Flip H</button>
+                                    <button type="button" onclick="flipImage('vertical')" class="control-btn">↕️ Flip V</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Editor Action Buttons -->
+                    <div class="editor-actions">
+                        <button type="button" onclick="saveEditedImage()" class="save-edited-btn">💾 Save Changes</button>
+                        <button type="button" onclick="cancelImageEdit()" class="cancel-edit-btn">❌ Cancel</button>
+                    </div>
+                </div>
+                <button onclick="saveProfile()" class="save-profile-btn">💾 Save Profile</button>
+            </div>
+        </div>
+    </div>
 
     <script src="script-github.js?v=5"></script>
 </body>
