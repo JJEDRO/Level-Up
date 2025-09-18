@@ -4751,3 +4751,408 @@ function createDefaultUserData(name = 'Workout User') {
         }
     };
 }
+
+// =============================================================================
+// 60-DAY GYM TRACKER FUNCTIONALITY
+// =============================================================================
+
+// Global gym tracking variables
+let gymTrackerData = {
+    startDate: null,
+    visits: [], // Array of {date, duration, notes}
+    isCalendarView: true
+};
+
+// Initialize gym tracker data
+function initializeGymTracker() {
+    const savedData = localStorage.getItem('gymTrackerData');
+    if (savedData) {
+        gymTrackerData = JSON.parse(savedData);
+    } else {
+        // Set start date to today
+        gymTrackerData.startDate = getCurrentDate();
+        saveGymTrackerData();
+    }
+    updateGymTrackerDisplay();
+}
+
+// Save gym tracker data
+function saveGymTrackerData() {
+    localStorage.setItem('gymTrackerData', JSON.stringify(gymTrackerData));
+}
+
+// Log gym visit modal
+function logGymVisit() {
+    const modal = document.getElementById('gym-visit-modal');
+    const dateInput = document.getElementById('visit-date');
+    const durationInput = document.getElementById('visit-duration');
+    const notesInput = document.getElementById('visit-notes');
+    
+    // Set default date to today
+    dateInput.value = getCurrentDate();
+    durationInput.value = '';
+    notesInput.value = '';
+    
+    modal.classList.remove('hidden');
+    durationInput.focus();
+}
+
+// Close gym visit modal
+function closeGymVisitModal() {
+    document.getElementById('gym-visit-modal').classList.add('hidden');
+}
+
+// Save gym visit
+function saveGymVisit() {
+    const date = document.getElementById('visit-date').value;
+    const duration = parseFloat(document.getElementById('visit-duration').value);
+    const notes = document.getElementById('visit-notes').value;
+    
+    if (!date || !duration || duration <= 0) {
+        showNotification('Please enter a valid date and duration', 'error');
+        return;
+    }
+    
+    // Check if visit already exists for this date
+    const existingVisitIndex = gymTrackerData.visits.findIndex(visit => visit.date === date);
+    
+    const visitData = {
+        date: date,
+        duration: duration,
+        notes: notes,
+        timestamp: new Date().toISOString()
+    };
+    
+    if (existingVisitIndex >= 0) {
+        // Update existing visit
+        gymTrackerData.visits[existingVisitIndex] = visitData;
+        showNotification('Gym visit updated!', 'success');
+    } else {
+        // Add new visit
+        gymTrackerData.visits.push(visitData);
+        gymTrackerData.visits.sort((a, b) => new Date(b.date) - new Date(a.date));
+        showNotification('Gym visit logged!', 'success');
+    }
+    
+    saveGymTrackerData();
+    updateGymTrackerDisplay();
+    closeGymVisitModal();
+}
+
+// Toggle between calendar and list view
+function toggleGymTrackerView() {
+    gymTrackerData.isCalendarView = !gymTrackerData.isCalendarView;
+    saveGymTrackerData();
+    updateGymTrackerDisplay();
+}
+
+// Update gym tracker display
+function updateGymTrackerDisplay() {
+    updateGymStats();
+    
+    const calendarView = document.getElementById('gym-calendar-view');
+    const listView = document.getElementById('gym-list-view');
+    const toggleBtn = document.querySelector('.toggle-view-btn');
+    
+    if (gymTrackerData.isCalendarView) {
+        calendarView.classList.remove('hidden');
+        listView.classList.add('hidden');
+        toggleBtn.innerHTML = '📊 Toggle List View';
+        generateGymCalendar();
+    } else {
+        calendarView.classList.add('hidden');
+        listView.classList.remove('hidden');
+        toggleBtn.innerHTML = '📅 Toggle Calendar View';
+        generateGymVisitsList();
+    }
+}
+
+// Update gym statistics
+function updateGymStats() {
+    const totalVisits = gymTrackerData.visits.length;
+    const totalHours = gymTrackerData.visits.reduce((sum, visit) => sum + visit.duration, 0);
+    const currentStreak = calculateGymStreak();
+    const daysRemaining = calculateDaysRemaining();
+    
+    document.getElementById('total-gym-visits').textContent = totalVisits;
+    document.getElementById('total-gym-hours').textContent = totalHours.toFixed(1);
+    document.getElementById('current-gym-streak').textContent = currentStreak;
+    document.getElementById('days-remaining').textContent = daysRemaining;
+}
+
+// Calculate gym streak
+function calculateGymStreak() {
+    if (gymTrackerData.visits.length === 0) return 0;
+    
+    const sortedVisits = [...gymTrackerData.visits].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let streak = 0;
+    let currentDate = new Date(today);
+    
+    // Check consecutive days working backwards from today
+    while (true) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        const hasVisit = sortedVisits.some(visit => visit.date === dateStr);
+        
+        if (hasVisit) {
+            streak++;
+            currentDate.setDate(currentDate.getDate() - 1);
+        } else if (streak === 0) {
+            // If we haven't started counting and there's no visit today, check yesterday
+            currentDate.setDate(currentDate.getDate() - 1);
+            const yesterdayStr = currentDate.toISOString().split('T')[0];
+            const hasYesterdayVisit = sortedVisits.some(visit => visit.date === yesterdayStr);
+            
+            if (hasYesterdayVisit) {
+                streak = 1;
+                currentDate.setDate(currentDate.getDate() - 1);
+            } else {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
+    
+    return streak;
+}
+
+// Calculate days remaining in 60-day challenge
+function calculateDaysRemaining() {
+    if (!gymTrackerData.startDate) return 60;
+    
+    const startDate = new Date(gymTrackerData.startDate);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 60);
+    
+    const today = new Date();
+    const diffTime = endDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return Math.max(0, diffDays);
+}
+
+// Generate gym calendar
+function generateGymCalendar() {
+    const calendarGrid = document.getElementById('gym-calendar-grid');
+    calendarGrid.innerHTML = '';
+    
+    if (!gymTrackerData.startDate) return;
+    
+    const startDate = new Date(gymTrackerData.startDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Add day headers
+    const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    dayHeaders.forEach(day => {
+        const header = document.createElement('div');
+        header.className = 'calendar-day-header';
+        header.textContent = day;
+        header.style.cssText = `
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            font-weight: bold;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+        `;
+        calendarGrid.appendChild(header);
+    });
+    
+    // Calculate calendar start (beginning of week containing start date)
+    const calendarStart = new Date(startDate);
+    calendarStart.setDate(startDate.getDate() - startDate.getDay());
+    
+    // Generate 60 days worth of calendar
+    for (let i = 0; i < 70; i++) { // Extra days to fill the grid
+        const currentDate = new Date(calendarStart);
+        currentDate.setDate(calendarStart.getDate() + i);
+        
+        const dateStr = currentDate.toISOString().split('T')[0];
+        const dayElement = document.createElement('div');
+        dayElement.className = 'calendar-day';
+        
+        // Check if this date has a visit
+        const visit = gymTrackerData.visits.find(v => v.date === dateStr);
+        const isToday = currentDate.getTime() === today.getTime();
+        const isFuture = currentDate > today;
+        const isInChallengePeriod = currentDate >= startDate && currentDate < new Date(startDate.getTime() + 60 * 24 * 60 * 60 * 1000);
+        
+        dayElement.innerHTML = `
+            <span class="day-number">${currentDate.getDate()}</span>
+            ${visit ? `<div class="visit-indicator"></div>` : ''}
+        `;
+        
+        if (visit) {
+            dayElement.classList.add('has-visit');
+            dayElement.title = `${visit.duration}h - ${visit.notes || 'No notes'}`;
+        }
+        
+        if (isToday) {
+            dayElement.classList.add('today');
+        }
+        
+        if (isFuture) {
+            dayElement.classList.add('future');
+        }
+        
+        if (!isInChallengePeriod) {
+            dayElement.style.opacity = '0.3';
+        }
+        
+        // Add click handler for past and current dates
+        if (!isFuture && isInChallengePeriod) {
+            dayElement.addEventListener('click', () => {
+                document.getElementById('visit-date').value = dateStr;
+                if (visit) {
+                    document.getElementById('visit-duration').value = visit.duration;
+                    document.getElementById('visit-notes').value = visit.notes || '';
+                }
+                logGymVisit();
+            });
+        }
+        
+        calendarGrid.appendChild(dayElement);
+        
+        // Stop after 60 days from start
+        if (currentDate >= new Date(startDate.getTime() + 60 * 24 * 60 * 60 * 1000)) break;
+    }
+}
+
+// Generate gym visits list
+function generateGymVisitsList() {
+    const visitsList = document.getElementById('gym-visits-list');
+    visitsList.innerHTML = '';
+    
+    if (gymTrackerData.visits.length === 0) {
+        visitsList.innerHTML = '<div class="text-center" style="padding: 2rem; color: #666;">No gym visits recorded yet. Start by logging your first visit!</div>';
+        return;
+    }
+    
+    const sortedVisits = [...gymTrackerData.visits].sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    sortedVisits.forEach(visit => {
+        const visitElement = document.createElement('div');
+        visitElement.className = 'visit-item';
+        visitElement.innerHTML = `
+            <div class="visit-date">${formatDate(visit.date)}</div>
+            <div class="visit-duration">${visit.duration}h workout</div>
+            ${visit.notes ? `<div class="visit-notes">${visit.notes}</div>` : ''}
+        `;
+        
+        // Add click handler to edit
+        visitElement.addEventListener('click', () => {
+            document.getElementById('visit-date').value = visit.date;
+            document.getElementById('visit-duration').value = visit.duration;
+            document.getElementById('visit-notes').value = visit.notes || '';
+            logGymVisit();
+        });
+        
+        visitsList.appendChild(visitElement);
+    });
+}
+
+// Format date for display
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (dateString === today.toISOString().split('T')[0]) {
+        return 'Today';
+    } else if (dateString === yesterday.toISOString().split('T')[0]) {
+        return 'Yesterday';
+    } else {
+        return date.toLocaleDateString('en-US', { 
+            weekday: 'short', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+    }
+}
+
+// Export to Google Sheets
+function exportToGoogleSheets() {
+    if (gymTrackerData.visits.length === 0) {
+        showNotification('No gym visits to export yet!', 'error');
+        return;
+    }
+    
+    // Generate CSV data
+    let csvContent = 'Date,Day of Week,Duration (Hours),Notes,Week Number\n';
+    
+    const sortedVisits = [...gymTrackerData.visits].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const startDate = new Date(gymTrackerData.startDate);
+    
+    // Add all 60 days, marking visited days
+    for (let i = 0; i < 60; i++) {
+        const currentDate = new Date(startDate);
+        currentDate.setDate(startDate.getDate() + i);
+        const dateStr = currentDate.toISOString().split('T')[0];
+        
+        const visit = sortedVisits.find(v => v.date === dateStr);
+        const dayOfWeek = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+        const weekNumber = Math.floor(i / 7) + 1;
+        
+        csvContent += `${dateStr},${dayOfWeek},${visit ? visit.duration : '0'},${visit ? (visit.notes || '') : 'No gym visit'},Week ${weekNumber}\n`;
+    }
+    
+    // Create downloadable file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `60-day-gym-tracker-${getCurrentDate()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Show instructions for Google Sheets
+    showGoogleSheetsInstructions();
+}
+
+// Show Google Sheets import instructions
+function showGoogleSheetsInstructions() {
+    const instructions = `
+📋 Google Sheets Import Instructions:
+
+1. Open Google Sheets (sheets.google.com)
+2. Create a new spreadsheet
+3. Click File → Import
+4. Upload the downloaded CSV file
+5. Choose "Replace current sheet"
+6. Your 60-day gym tracker is now in Google Sheets!
+
+Optional Enhancements:
+• Add charts to visualize your progress
+• Use conditional formatting to highlight gym days
+• Create formulas to track weekly totals
+• Share with friends for accountability
+
+The CSV includes:
+- All 60 days of your challenge
+- Actual workout hours for gym days
+- Notes for each session
+- Week numbers for easy grouping
+    `;
+    
+    showNotification(instructions, 'success', 10000);
+    
+    // Also log to console for easy copying
+    console.log('60-Day Gym Tracker - Google Sheets Instructions:');
+    console.log(instructions);
+}
+
+// Initialize gym tracker when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Add small delay to ensure other initialization is complete
+    setTimeout(initializeGymTracker, 100);
+});
